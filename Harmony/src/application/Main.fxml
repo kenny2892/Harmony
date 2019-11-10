@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Group?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.Controller">
+   <children>
+      <Rectangle fill="#202225" height="720.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="1280.0" />
+      <Rectangle fx:id="topBar" fill="#202225" height="23.0" layoutX="99.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="1127.0" />
+      <Rectangle arcHeight="25.0" arcWidth="25.0" fill="#2f3136" height="697.0" layoutX="103.0" layoutY="23.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="1176.0" />
+      <Rectangle fill="#2f3136" height="697.0" layoutX="1259.0" layoutY="23.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="21.0" />
+      <Rectangle fill="#2f3136" height="40.0" layoutX="103.0" layoutY="680.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="47.0" />
+      <ImageView fitHeight="15.0" fitWidth="102.0" layoutX="4.0" layoutY="5.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../resources/Icon%20Text%20-%20Grey.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="startRoomIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="32.0" onMouseClicked="#clickStartRoom" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../resources/Test%20Room%20Icon.png" />
+         </image>
+      </ImageView>
+      <Rectangle fill="#36393f" height="60.0" layoutX="302.0" layoutY="23.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="978.0" />
+      <Rectangle fill="#36393f" height="637.0" layoutX="302.0" layoutY="83.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="768.0" />
+      <Rectangle fx:id="closeBG" fill="#202225" height="23.0" layoutX="1255.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
+      <Rectangle fx:id="minimizeBG" fill="#202225" height="23.0" layoutX="1230.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
+      <Line fx:id="closeIcon2" endX="-92.0" endY="-12.0" layoutX="1365.0" layoutY="17.0" startX="-101.75" startY="-0.75" stroke="#b9bbbe" />
+      <Line fx:id="closeIcon1" endX="-92.0" endY="-0.75" layoutX="1365.0" layoutY="17.0" startX="-101.75" startY="-12.0" stroke="#b9bbbe" />
+      <Line fx:id="minimizeIcon" endX="-88.0" endY="-3.814697265625E-6" layoutX="1339.0" layoutY="11.0" startX="-104.5" startY="-3.814697265625E-6" stroke="#b9bbbe" />
+      <Rectangle fx:id="minimizeHitBox" fill="#202225" height="23.0" layoutX="1230.0" onMouseClicked="#minimizeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
+      <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="1255.0" onMouseClicked="#closeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
+      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@application.css" visible="false">
+         <children>
+            <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@application.css">
+               <content>
+                  <TextFlow fx:id="mainTextFlow" prefHeight="509.0" prefWidth="725.0" stylesheets="@application.css" />
+               </content>
+            </ScrollPane>
+            <Rectangle arcHeight="10.0" arcWidth="10.0" fill="#40444b" height="60.0" layoutY="552.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="722.0" />
+            <TextArea fx:id="enterMsgTextArea" layoutX="60.0" layoutY="564.0" prefHeight="44.0" prefWidth="653.0" promptText="Message #" stylesheets="@application.css" wrapText="true">
+               <font>
+                  <Font name="Arial" size="14.0" />
+               </font>
+            </TextArea>
+            <Line endX="-100.0" endY="58.0" layoutX="153.0" layoutY="554.0" startX="-100.0" startY="-2.0" stroke="#36393f" />
+            <TextFlow fx:id="peopleTextFlow" layoutX="746.0" prefHeight="628.0" prefWidth="200.0" />
+            <Line endX="620.0" endY="-2.0" layoutX="101.0" layoutY="537.0" startX="-100.0" startY="-2.0" stroke="#727373" />
+         </children>
+      </Group>
+      <Line endX="25.0" layoutX="51.0" layoutY="121.0" startX="-25.0" stroke="#2f3136" />
+      <Line endX="-100.0" endY="628.0" layoutX="402.0" layoutY="91.0" startX="-100.0" startY="-68.0" stroke="#232527" />
+      <Line endX="1075.0" endY="-68.0" layoutX="204.0" layoutY="151.0" startX="-100.0" startY="-68.0" stroke="#232527" />
+      <Line endX="-100.0" endY="628.0" layoutX="1170.0" layoutY="91.0" startX="-100.0" startY="-8.0" stroke="#232527" />
+      <Line fx:id="selectedRoomLine" endX="-100.0" endY="65.0" layoutX="104.0" layoutY="138.0" startX="-100.0" stroke="WHITE" strokeWidth="7.0" />
+      <ImageView fx:id="roomOneIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="132.0" onMouseClicked="#clickRoomOne" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../resources/Test%20Room%20Icon.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="roomTwoIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="232.0" onMouseClicked="#clickRoomTwo" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../resources/Test%20Room%20Icon.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="roomThreeIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="332.0" onMouseClicked="#clickRoomThree" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../resources/Test%20Room%20Icon.png" />
+         </image>
+      </ImageView>
+      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0">
+         <children>
+            <Rectangle fill="#36393f" height="635.0" layoutX="589.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="239.0" />
+            <TextField fx:id="ipAddressField" layoutX="201.0" layoutY="339.0" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+            <Text fill="WHITE" layoutX="138.0" layoutY="330.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Server IP Address">
+               <font>
+                  <Font name="Arial" size="48.0" />
+               </font>
+            </Text>
+            <TextField fx:id="portField" layoutX="202.0" layoutY="442.0" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+            <Text fill="WHITE" layoutX="208.0" layoutY="430.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Base Port #" textAlignment="CENTER">
+               <font>
+                  <Font name="Arial" size="48.0" />
+               </font>
+            </Text>
+            <Text fill="WHITE" layoutX="-1.0" layoutY="218.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Created By Jesse Ross" underline="true">
+               <font>
+                  <Font name="Arial" size="64.0" />
+               </font>
+            </Text>
+            <ImageView fitHeight="93.0" fitWidth="493.0" layoutX="164.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../resources/Icon%20Text%20-%20Orange.png" />
+               </image>
+            </ImageView>
+            <ImageView fitHeight="138.0" fitWidth="120.0" layoutX="23.0" layoutY="19.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../resources/Icon.png" />
+               </image>
+            </ImageView>
+            <Text fx:id="badConnection" fill="#f50707" layoutX="492.0" layoutY="404.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Bad Connection" visible="false">
+               <font>
+                  <Font name="Arial" size="28.0" />
+               </font>
+            </Text>
+            <Button fx:id="connectBtn" layoutX="245.0" layoutY="493.0" mnemonicParsing="false" onAction="#connect" prefHeight="48.0" prefWidth="179.0" text="Connect">
+               <font>
+                  <Font name="Arial" size="25.0" />
+               </font>
+            </Button>
+            <Group fx:id="loginScreen" layoutX="122.0" layoutY="275.0" visible="false">
+               <children>
+                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#2f3136" height="271.0" stroke="#232527" strokeType="INSIDE" strokeWidth="2.0" width="422.0" />
+                  <TextField fx:id="usernameField" layoutX="98.0" layoutY="89.0" prefHeight="33.0" prefWidth="230.0" promptText="Username" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+                  <PasswordField fx:id="passwordField" layoutX="98.0" layoutY="129.0" prefHeight="33.0" prefWidth="230.0" promptText="Password" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+                  <Text fx:id="incorrectPassword" fill="#f50707" layoutX="91.0" layoutY="190.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Incorrect Password" visible="false">
+                     <font>
+                        <Font name="Arial" size="28.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="accountInUse" fill="#f50707" layoutX="121.0" layoutY="83.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Account in use" textAlignment="CENTER" visible="false">
+                     <font>
+                        <Font name="Arial" size="28.0" />
+                     </font>
+                  </Text>
+                  <Text fill="WHITE" layoutX="147.0" layoutY="43.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Log-In" textAlignment="CENTER">
+                     <font>
+                        <Font name="Arial" size="45.0" />
+                     </font>
+                  </Text>
+                  <Button fx:id="signInBtn" layoutX="130.0" layoutY="207.0" mnemonicParsing="false" onAction="#signIn" prefHeight="43.0" prefWidth="162.0" text="Sign-In">
+                     <font>
+                        <Font name="Arial" size="20.0" />
+                     </font>
+                  </Button>
+               </children>
+            </Group>
+         </children>
+      </Group>
+   </children>
+</AnchorPane>

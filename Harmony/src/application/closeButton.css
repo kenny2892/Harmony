@@ -1,0 +1,9 @@
+.rectangle:hover
+{
+	-fx-fill: #f04747;
+}
+
+.line:hover
+{
+	-fx-fill: white;
+}
