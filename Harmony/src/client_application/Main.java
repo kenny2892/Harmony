@@ -26,7 +26,7 @@ public class Main extends Application
 	private static String username;
 	private static Color userColor;
 	private static Stage stage;
-	private static ArrayList<String> usersInRoom; // Multiple people can't login at once, Can't do links (pases //), closing inifinite loop (closing without loging in), IDEA: how many msgs are in a room, Change swaping of chats
+	private static ArrayList<String> usersInRoom; // Notes from Beta Tester: Multiple people can't login at once, Can't do links (pases //), closing inifinite loop (closing without loging in), IDEA: how many msgs are in a room, Change swaping of chats
 	private static ArrayList<Node> roomOneChat; // Arrows turn white, possible add loading room screen
 	private static ArrayList<Node> roomTwoChat;
 	private static ArrayList<Node> roomThreeChat;
