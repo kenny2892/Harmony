@@ -2,6 +2,8 @@
 
 <?import javafx.scene.Group?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
@@ -9,6 +11,8 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
@@ -41,7 +45,7 @@
       <Line fx:id="minimizeIcon" endX="-88.0" endY="-3.814697265625E-6" layoutX="1339.0" layoutY="11.0" startX="-104.5" startY="-3.814697265625E-6" stroke="#b9bbbe" />
       <Rectangle fx:id="minimizeHitBox" fill="#202225" height="23.0" layoutX="1230.0" onMouseClicked="#minimizeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
       <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="1255.0" onMouseClicked="#closeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
-      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@application.css" visible="false">
+      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@application.css">
          <children>
             <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@application.css">
                <content>
@@ -49,14 +53,48 @@
                </content>
             </ScrollPane>
             <Rectangle arcHeight="10.0" arcWidth="10.0" fill="#40444b" height="60.0" layoutY="552.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="722.0" />
-            <TextArea fx:id="enterMsgTextArea" layoutX="60.0" layoutY="564.0" prefHeight="44.0" prefWidth="653.0" promptText="Message #" stylesheets="@application.css" wrapText="true">
+            <TextArea fx:id="enterMsgTextArea" layoutX="60.0" layoutY="564.0" prefHeight="44.0" prefWidth="653.0" promptText="Message #general" stylesheets="@application.css" wrapText="true">
                <font>
                   <Font name="Arial" size="14.0" />
                </font>
             </TextArea>
             <Line endX="-100.0" endY="58.0" layoutX="153.0" layoutY="554.0" startX="-100.0" startY="-2.0" stroke="#36393f" />
             <TextFlow fx:id="peopleTextFlow" layoutX="746.0" prefHeight="628.0" prefWidth="200.0" />
-            <Line endX="620.0" endY="-2.0" layoutX="101.0" layoutY="537.0" startX="-100.0" startY="-2.0" stroke="#727373" />
+            <Line endX="620.0" endY="-2.0" layoutX="101.0" layoutY="532.0" startX="-100.0" startY="-2.0" stroke="#727373" />
+            <Group layoutX="26.0" layoutY="582.0">
+               <children>
+                  <Circle fill="#b9bbbe" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
+                  <Line endX="-67.0" endY="15.0" layoutX="67.0" layoutY="-8.0" startX="-67.0" startY="2.0" stroke="#40444b" strokeWidth="2.0" />
+                  <Line endX="15.0" endY="17.0" layoutX="-8.0" layoutY="-17.0" startX="2.0" startY="17.0" stroke="#40444b" strokeWidth="2.0" />
+                  <Circle fill="WHITE" opacity="0.01" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
+               </children>
+            </Group>
+            <Pane fx:id="fileTransferPanel" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0">
+               <children>
+                  <Rectangle fill="#2f3136" height="123.0" layoutY="26.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
+                  <ComboBox fx:id="fileUserSelect" layoutX="486.0" layoutY="48.0" prefWidth="150.0" promptText="Select a User" />
+                  <Text fill="WHITE" layoutX="107.0" layoutY="68.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Who would you like to send the file to:">
+                     <font>
+                        <Font name="Arial" size="22.0" />
+                     </font>
+                  </Text>
+                  <Button layoutX="316.0" layoutY="98.0" mnemonicParsing="false" prefWidth="110.0" text="Select File">
+                     <font>
+                        <Font name="Arial" size="18.0" />
+                     </font>
+                  </Button>
+                  <Button layoutX="195.0" layoutY="98.0" mnemonicParsing="false" prefWidth="110.0" text="Send File">
+                     <font>
+                        <Font name="Arial" size="18.0" />
+                     </font>
+                  </Button>
+                  <Button layoutX="439.0" layoutY="98.0" mnemonicParsing="false" prefWidth="110.0" text="Cancel">
+                     <font>
+                        <Font name="Arial" size="18.0" />
+                     </font>
+                  </Button>
+               </children>
+            </Pane>
          </children>
       </Group>
       <Line endX="25.0" layoutX="51.0" layoutY="121.0" startX="-25.0" stroke="#2f3136" />
@@ -79,26 +117,9 @@
             <Image url="@../resources/Test%20Room%20Icon.png" />
          </image>
       </ImageView>
-      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0">
+      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0" visible="false">
          <children>
             <Rectangle fill="#36393f" height="635.0" layoutX="589.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="239.0" />
-            <TextField fx:id="ipAddressField" layoutX="201.0" layoutY="339.0" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
-            <Text fill="WHITE" layoutX="138.0" layoutY="330.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Server IP Address">
-               <font>
-                  <Font name="Arial" size="48.0" />
-               </font>
-            </Text>
-            <TextField fx:id="portField" layoutX="202.0" layoutY="442.0" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
-            <Text fill="WHITE" layoutX="208.0" layoutY="430.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Base Port #" textAlignment="CENTER">
-               <font>
-                  <Font name="Arial" size="48.0" />
-               </font>
-            </Text>
-            <Text fill="WHITE" layoutX="-1.0" layoutY="218.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Created By Jesse Ross" underline="true">
-               <font>
-                  <Font name="Arial" size="64.0" />
-               </font>
-            </Text>
             <ImageView fitHeight="93.0" fitWidth="493.0" layoutX="164.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@../resources/Icon%20Text%20-%20Orange.png" />
@@ -109,41 +130,118 @@
                   <Image url="@../resources/Icon.png" />
                </image>
             </ImageView>
-            <Text fx:id="badConnection" fill="#f50707" layoutX="492.0" layoutY="404.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Bad Connection" visible="false">
+            <Text fill="WHITE" layoutX="-1.0" layoutY="218.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Created By Jesse Ross" underline="true">
                <font>
-                  <Font name="Arial" size="28.0" />
+                  <Font name="Arial" size="64.0" />
                </font>
             </Text>
-            <Button fx:id="connectBtn" layoutX="245.0" layoutY="493.0" mnemonicParsing="false" onAction="#connect" prefHeight="48.0" prefWidth="179.0" text="Connect">
-               <font>
-                  <Font name="Arial" size="25.0" />
-               </font>
-            </Button>
-            <Group fx:id="loginScreen" layoutX="122.0" layoutY="275.0" visible="false">
+            <Pane fx:id="titlePanel" layoutX="122.0" layoutY="275.0" visible="false">
                <children>
-                  <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#2f3136" height="271.0" stroke="#232527" strokeType="INSIDE" strokeWidth="2.0" width="422.0" />
-                  <TextField fx:id="usernameField" layoutX="98.0" layoutY="89.0" prefHeight="33.0" prefWidth="230.0" promptText="Username" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
-                  <PasswordField fx:id="passwordField" layoutX="98.0" layoutY="129.0" prefHeight="33.0" prefWidth="230.0" promptText="Password" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
-                  <Text fx:id="incorrectPassword" fill="#f50707" layoutX="91.0" layoutY="190.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Incorrect Password" visible="false">
+                  <Group fx:id="serverScreen" layoutX="16.0" layoutY="9.09375">
+                     <children>
+                        <TextField fx:id="ipAddressField" layoutX="63.0" layoutY="52.453125" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+                        <Text fill="WHITE" layoutY="41.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Server IP Address">
+                           <font>
+                              <Font name="Arial" size="48.0" />
+                           </font>
+                        </Text>
+                        <TextField fx:id="portField" layoutX="64.0" layoutY="155.453125" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+                        <Text fill="WHITE" layoutX="130.0" layoutY="142.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Port #" textAlignment="CENTER">
+                           <font>
+                              <Font name="Arial" size="48.0" />
+                           </font>
+                        </Text>
+                        <Button fx:id="connectBtn" layoutX="107.0" layoutY="206.453125" mnemonicParsing="false" onAction="#connect" prefHeight="48.0" prefWidth="179.0" text="Connect">
+                           <font>
+                              <Font name="Arial" size="25.0" />
+                           </font>
+                        </Button>
+                        <Text fx:id="badConnection" fill="#f50707" layoutX="97.0" layoutY="-4.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Bad Connection" visible="false">
+                           <font>
+                              <Font name="Arial" size="28.0" />
+                           </font>
+                        </Text>
+                     </children>
+                  </Group>
+                  <Group fx:id="loginScreen" visible="false">
+                     <children>
+                        <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#2f3136" height="271.0" stroke="#232527" strokeType="INSIDE" strokeWidth="2.0" width="422.0" />
+                        <TextField fx:id="usernameField" layoutX="98.0" layoutY="89.0" prefHeight="33.0" prefWidth="230.0" promptText="Username" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+                        <PasswordField fx:id="passwordField" layoutX="98.0" layoutY="129.0" prefHeight="33.0" prefWidth="230.0" promptText="Password" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
+                        <Text fx:id="incorrectPassword" fill="#f50707" layoutX="91.0" layoutY="190.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Incorrect Password" visible="false">
+                           <font>
+                              <Font name="Arial" size="28.0" />
+                           </font>
+                        </Text>
+                        <Text fx:id="accountInUse" fill="#f50707" layoutX="121.0" layoutY="83.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Account in use" textAlignment="CENTER" visible="false">
+                           <font>
+                              <Font name="Arial" size="28.0" />
+                           </font>
+                        </Text>
+                        <Text fill="WHITE" layoutX="147.0" layoutY="43.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Log-In" textAlignment="CENTER">
+                           <font>
+                              <Font name="Arial" size="45.0" />
+                           </font>
+                        </Text>
+                        <Button fx:id="signInBtn" layoutX="130.0" layoutY="207.0" mnemonicParsing="false" onAction="#signIn" prefHeight="43.0" prefWidth="162.0" text="Sign-In">
+                           <font>
+                              <Font name="Arial" size="20.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </Group>
+                  <Group fx:id="signedInScreen" layoutX="123.0" layoutY="267.0">
+                     <children>
+                        <Button mnemonicParsing="false" text="Change Account" visible="false">
+                           <font>
+                              <Font name="Arial" size="20.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </Group>
+               </children>
+            </Pane>
+            <Pane fx:id="settingsPanel" layoutX="-132.0" layoutY="232.0" prefHeight="394.0" prefWidth="944.0">
+               <children>
+                  <ColorPicker layoutX="413.0" layoutY="253.0" prefHeight="30.0" prefWidth="118.0" />
+                  <Circle fill="DODGERBLUE" layoutX="472.0" layoutY="195.0" radius="51.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
+                  <Text fill="WHITE" layoutX="373.0" layoutY="134.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Color:" textAlignment="CENTER">
                      <font>
-                        <Font name="Arial" size="28.0" />
+                        <Font name="Arial" size="39.0" />
                      </font>
                   </Text>
-                  <Text fx:id="accountInUse" fill="#f50707" layoutX="121.0" layoutY="83.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Account in use" textAlignment="CENTER" visible="false">
-                     <font>
-                        <Font name="Arial" size="28.0" />
-                     </font>
-                  </Text>
-                  <Text fill="WHITE" layoutX="147.0" layoutY="43.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Log-In" textAlignment="CENTER">
-                     <font>
-                        <Font name="Arial" size="45.0" />
-                     </font>
-                  </Text>
-                  <Button fx:id="signInBtn" layoutX="130.0" layoutY="207.0" mnemonicParsing="false" onAction="#signIn" prefHeight="43.0" prefWidth="162.0" text="Sign-In">
+                  <Button layoutX="133.0" layoutY="14.0" mnemonicParsing="false" text="Downloads Path:">
                      <font>
                         <Font name="Arial" size="20.0" />
                      </font>
                   </Button>
+                  <Text fx:id="filePath" fill="WHITE" layoutX="317.0" layoutY="42.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Path" underline="true">
+                     <font>
+                        <Font name="Arial" size="27.0" />
+                     </font>
+                  </Text>
+               </children>
+            </Pane>
+            <Group layoutX="-338.0" layoutY="8.0">
+               <children>
+                  <Rectangle fx:id="titlePanelBtn" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
+                  <Text fill="#829297" layoutX="42.0" layoutY="31.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Title">
+                     <font>
+                        <Font name="Arial" size="21.0" />
+                     </font>
+                  </Text>
+                  <Rectangle arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
+               </children>
+            </Group>
+            <Group layoutX="-338.0" layoutY="64.0">
+               <children>
+                  <Rectangle fx:id="settingsPanelBtn" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
+                  <Text fill="#829297" layoutX="42.0" layoutY="29.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Settings">
+                     <font>
+                        <Font name="Arial" size="21.0" />
+                     </font>
+                  </Text>
+                  <Rectangle arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
                </children>
             </Group>
          </children>

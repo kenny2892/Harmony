@@ -23,7 +23,7 @@ import client_application.ClientData;
 public class SocketServer
 {
 	private Selector selector;
-	private Map<SocketChannel, List<byte[]>> dataMap;
+	private Map<SocketChannel, String> dataMap;
 	private InetSocketAddress listeningAddress;
 	private ArrayList<ClientData> userMap;
 	private Map<String, String> userAddRequests;
@@ -46,7 +46,7 @@ public class SocketServer
 			e.printStackTrace();
 		}
 		
-		dataMap = new HashMap<SocketChannel, List<byte[]>>();
+		dataMap = new HashMap<SocketChannel, String>();
 		userMap = new ArrayList<ClientData>();
 		userAddRequests = new HashMap<String, String>();
 	}
@@ -108,7 +108,6 @@ public class SocketServer
 			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
 			System.out.println("Connected " + remoteAddress);
 
-			dataMap.put(socketChannel, new ArrayList<byte[]>());
 			socketChannel.register(this.selector, SelectionKey.OP_READ);
 		}
 
@@ -124,6 +123,7 @@ public class SocketServer
 		SocketChannel socketChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = ByteBuffer.allocate(1024);
 		String msg = "";
+		byte[] sentObj = new byte[0];
 
 		int numberRead = -1;
 		
@@ -137,6 +137,45 @@ public class SocketServer
 				buffer.get(data);
 				msg += new String(data, StandardCharsets.UTF_8);
 				buffer.clear();
+				
+				if(msg.startsWith("FILE//"))
+				{
+					while((numberRead = socketChannel.read(buffer)) > 0)
+					{
+						System.out.println("in loop");
+						buffer.flip();
+
+						data = new byte[buffer.limit()];
+						buffer.get(data);
+						byte[] temp = new byte[sentObj.length + data.length];
+						System.arraycopy(sentObj, 0, temp, 0, sentObj.length);
+						System.arraycopy(data, 0, temp, sentObj.length, data.length);
+						
+						sentObj = temp;
+						
+						buffer.clear();
+					}
+					
+					if(numberRead == -1)
+						break;
+					
+					for(Map.Entry<SocketChannel, String> entry : dataMap.entrySet()) 
+					{
+						String[] parts = msg.split("//"); // FILE//Sender//Sender_Color//Reciever//File_Name
+						
+						if(parts[3].compareTo(entry.getValue()) == 0)
+						{
+							ByteBuffer bufferToSend = ByteBuffer.wrap(sentObj);
+							SocketChannel socket = entry.getKey();
+							socket.write(bufferToSend);
+							bufferToSend.rewind();
+							
+							break;
+						}
+					}
+					
+					return;
+				}
 			}
 		}
 
@@ -158,7 +197,10 @@ public class SocketServer
 			int index = userMap.indexOf(toFind);
 			
 			if(index < 0)
+			{
+				key.cancel();
 				return;
+			}
 			
 			ClientData user = userMap.get(index);
 			userMap.remove(index);
@@ -203,6 +245,7 @@ public class SocketServer
 			if(userMap.indexOf(toFind) < 0) // Account not in use
 			{
 				userMap.add(new ClientData(username, remoteAddress.toString().substring(1)));
+				dataMap.put(socketChannel, username);
 				
 				msg = "DM//USER_CHECK//No\n";
 			}
@@ -222,7 +265,7 @@ public class SocketServer
 			userAddRequests.put(remoteAddress.toString().substring(1), msg);
 		}
 		
-		else if(msg.startsWith("LIST//")) // TOD Add room check / Change to be client written
+		else if(msg.startsWith("LIST//")) // TODO Add room check / Change to be client written
 		{
 			String username = msg.substring(6);
 			

@@ -1,6 +1,9 @@
 package client_application;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -16,6 +19,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -31,8 +35,22 @@ public class Main extends Application
 	private static ArrayList<Node> roomTwoChat;
 	private static ArrayList<Node> roomThreeChat;
 	public static final int CHAR_LIMIT = 120;
+	private static StartMode startMode = StartMode.TITLE;
+	private static TitleMode titleMode = TitleMode.SERVER;
+	private static File downloadDirectory;
+	private static File fileToSend;
 	
 	private static double xOffset = 0, yOffset = 0;
+	
+	public enum StartMode
+	{
+		TITLE, SETTINGS
+	}
+	
+	public enum TitleMode
+	{
+		SERVER, LOGIN, SIGNED_IN
+	}
 	
 	@Override
 	public void start(Stage primaryStage)
@@ -69,6 +87,9 @@ public class Main extends Application
 			roomTwoChat = new ArrayList<Node>();
 			roomThreeChat = new ArrayList<Node>();
 			usersInRoom = new ArrayList<String>();
+			
+			String home = System.getProperty("user.home");
+			downloadDirectory = new File(home+"/Downloads/"); 
 		}
 		
 		catch(Exception e)
@@ -245,6 +266,16 @@ public class Main extends Application
 		return list;
 	}
 	
+	public static ArrayList<String> getUserArray()
+	{
+		return usersInRoom;
+	}
+	
+	public static String getDownloadDirPath()
+	{
+		return downloadDirectory.getPath();
+	}
+	
 	public static void minimizeApp()
 	{
 		stage.setIconified(true);
@@ -283,6 +314,82 @@ public class Main extends Application
 	public static void setY(MouseEvent event)
 	{
 		stage.setY(event.getScreenY() - yOffset);
+	}
+	
+	public static StartMode getStartMode()
+	{
+		return startMode;
+	}
+	
+	public static void setStartMode(StartMode mode)
+	{
+		if(mode == null)
+			return;
+		
+		startMode = mode;
+	}
+	
+	public static TitleMode getTitleMode()
+	{
+		return titleMode;
+	}
+	
+	public static void setTitleMode(TitleMode mode)
+	{
+		if(mode == null)
+			return;
+		
+		titleMode = mode;
+	}
+	
+	public static void selectFile()
+	{
+		if(stage == null)
+			return;
+		
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Choose a File to Send to ");
+		
+		fileToSend = chooser.showOpenDialog(stage);
+	}
+	
+	public static boolean sendFile(String userToSendTo)
+	{
+		if(fileToSend == null || !fileToSend.exists() || !usersInRoom.contains(userToSendTo))
+		{
+			// TODO
+			return false;
+		}
+		
+		try (Socket socket = new Socket("localhost", 8345))
+		{
+			InputStream in = new FileInputStream(fileToSend);
+			OutputStream out = socket.getOutputStream();
+			
+			PrintWriter writer = new PrintWriter(out, true); // FILE//Sender//Sender_Color//Reciever//File_Name
+			writer.println("FILE//" + username + "//#" + colorToHex(userColor) + "//" + "");
+			
+			Thread.sleep(10);
+			
+			byte[] buffer = new byte[3000];
+			out.write(1);
+			int count = 0;
+			while((count = in.read(buffer)) > 0)
+				out.write(buffer, 0, count);
+			
+			writer.close();
+			in.close();
+			out.close();
+			
+			return true;
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 	
 	private static String colorToHex(Color color)
