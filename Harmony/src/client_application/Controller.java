@@ -1,8 +1,11 @@
 package client_application;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.URL;
 import java.sql.Connection;
@@ -12,12 +15,17 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import client_application.Main.StartMode;
+import client_application.Main.TitleMode;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
@@ -28,6 +36,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -45,15 +54,26 @@ public class Controller
 	@FXML private TextField portField;
 	@FXML private ImageView startRoomIcon;
 	@FXML private Line selectedRoomLine;
+	
 	@FXML private TextFlow mainTextFlow;
 	@FXML private ScrollPane mainTxtScrollPane;
 	@FXML private TextArea enterMsgTextArea;
+	@FXML private Pane fileTransferPanel;
+	@FXML private ComboBox<String> fileUserSelect;
+	
+	@FXML private Group serverScreen;
 	@FXML private Group loginScreen;
+	@FXML private Group signedInScreen;
+	@FXML private Pane titlePanel;
+	@FXML private Pane settingsPanel;
+	@FXML private Rectangle titlePanelBtn;
+	@FXML private Rectangle settingsPanelBtn;
 	@FXML private TextField usernameField;
 	@FXML private PasswordField passwordField;
 	@FXML private Text incorrectPassword;
 	@FXML private Text badConnection;
 	@FXML private Text accountInUse;
+	@FXML private Text filePathTxt;
 
 	@FXML private Rectangle closeHitBox;
 	@FXML private Rectangle minimizeHitBox;
@@ -77,7 +97,7 @@ public class Controller
 
 	public void clickStartRoom()
 	{
-		startup();
+		showStartDisplay();
 
 		if (roomNum != 0)
 		{
@@ -91,8 +111,6 @@ public class Controller
 
 	public void startup()
 	{
-		startDisplay.setVisible(true);
-		chatDisplay.setVisible(false);
 		selectedRoomLine.setLayoutX(104);
 		selectedRoomLine.setLayoutY(38);
 		menuControls();
@@ -119,6 +137,9 @@ public class Controller
 
 		badConnection.setVisible(false);
 		loginScreen.setVisible(true);
+		serverScreen.setVisible(false);
+		
+		Main.setTitleMode(TitleMode.LOGIN);
 
 		checkForMsgs();
 	}
@@ -158,10 +179,48 @@ public class Controller
 		loginScreen.setVisible(false);
 		startDisplay.setVisible(false);
 		chatDisplay.setVisible(true);
+		fileTransferPanel.setVisible(false);
 
 		peopleTextFlow.getChildren().clear();
 		mainTextFlow.getChildren().clear();
 		return true;
+	}
+	
+	public void showStartDisplay()
+	{
+		startDisplay.setVisible(true);
+		chatDisplay.setVisible(false);
+		
+		if(Main.getStartMode() == StartMode.TITLE)
+		{
+			titlePanel.setVisible(true);
+			settingsPanel.setVisible(false);
+			
+			serverScreen.setVisible(false);
+			loginScreen.setVisible(false);
+			signedInScreen.setVisible(false);
+			
+			switch(Main.getTitleMode())
+			{
+				case SERVER:
+					serverScreen.setVisible(true);
+					break;
+
+				case LOGIN:
+					serverScreen.setVisible(true);
+					break;
+
+				case SIGNED_IN:
+					signedInScreen.setVisible(true);
+					break;
+			}
+		}
+		
+		else
+		{
+			titlePanel.setVisible(false);
+			settingsPanel.setVisible(true);
+		}
 	}
 
 	public void clickRoomOne()
@@ -243,13 +302,43 @@ public class Controller
 			{
 				InputStream input = Main.getSocket().getInputStream();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-
+				
 				while(!Main.getSocket().isClosed())
 				{
 					String msg = reader.readLine();
+					
 					Platform.runLater(() ->
 					{
-						displayMsg(msg);
+						if(msg.startsWith("FILE//")) // FILE//Sender//Sender_Color//Reciever//File_Name
+						{
+							String[] parts = msg.split("//");
+							
+							try
+							{
+								File fileToDownload = new File(Main.getDownloadDirPath() + parts[4]);
+								
+								InputStream in = new FileInputStream(fileToDownload);
+								OutputStream out = Main.getSocket().getOutputStream();
+								byte[] buffer = new byte[3000];
+								
+								int count = 0;
+								while((count = in.read(buffer)) > 0)
+									out.write(buffer, 0, count);
+								
+								in.close();
+								out.close();
+								
+								displayMsg("MSG//" + parts[1] + "//" + parts[2] + "//You Received a New File: " + parts[4]);
+							}
+							
+							catch(Exception e)
+							{
+								e.printStackTrace();
+							}
+						}
+						
+						else
+							displayMsg(msg);
 					});
 				}
 			}
@@ -333,6 +422,7 @@ public class Controller
 			{
 				loginScreen.setVisible(false);
 				Main.setUsername(usernameField.getText());
+				Main.setTitleMode(TitleMode.SIGNED_IN);
 			}
 
 			return null;
@@ -612,6 +702,32 @@ public class Controller
 				Main.setY(event);
 			}
 		});
+	}
+	
+	public void sendFileBtn()
+	{
+		ObservableList<String> users = FXCollections.observableArrayList(Main.getUserArray());
+		
+		fileUserSelect.setItems(users);
+		fileTransferPanel.setVisible(true);
+	}
+	
+	public void sendFile()
+	{
+		if(Main.sendFile(fileUserSelect.getValue()))
+			fileTransferPanel.setVisible(false);
+		
+		// TODO Else
+	}
+	
+	public void selectFileBtn()
+	{
+		Main.selectFile();
+	}
+	
+	public void cancelFileSend()
+	{
+		fileTransferPanel.setVisible(false);
 	}
 
 	public void minimizeApp()
