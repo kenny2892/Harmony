@@ -122,28 +122,13 @@ public class Main extends Application
 		return false;
 	}
 	
-	public static void joinServer(int roomNum)
+	public static void joinServer()
 	{
 		try
 		{
 			OutputStream output = socket.getOutputStream();
 			PrintWriter writer = new PrintWriter(output, true);
-			writer.println("USER//" + username + "//#" + colorToHex(userColor) + "//" + roomNum);
-		}
-		
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-	}
-	
-	public static void leaveServer()
-	{
-		try
-		{			
-			OutputStream output = socket.getOutputStream();
-			PrintWriter writer = new PrintWriter(output, true);
-			writer.println("LEAVING//" + username);
+			writer.println("\\u" + username + " #" + colorToHex(userColor));
 		}
 		
 		catch(Exception e)
@@ -156,12 +141,6 @@ public class Main extends Application
 	{
 		try
 		{
-			if(msg.startsWith("\\l"))
-				msg = "DM//" + username + "//LIST//MSG//Harmony//#F7931E//";
-			
-			else if(!msg.startsWith("CHECK_IF_IN_USE//")) // TODO Add DM as well
-				msg = "MSG//" + username + "//#" + colorToHex(userColor) + "//" + msg;
-			
 			OutputStream output = socket.getOutputStream();
 			PrintWriter writer = new PrintWriter(output, true);
 			writer.println(msg);
@@ -342,6 +321,17 @@ public class Main extends Application
 		titleMode = mode;
 	}
 	
+	public static String getHexColor()
+	{
+		if(userColor == null)
+		{
+			Random r = new Random();
+			userColor = Color.rgb(r.nextInt(256), r.nextInt(256), r.nextInt(256));
+		}
+		
+		return "#" + colorToHex(userColor);
+	}
+	
 	public static void selectFile()
 	{
 		if(stage == null)
@@ -366,8 +356,11 @@ public class Main extends Application
 			InputStream in = new FileInputStream(fileToSend);
 			OutputStream out = socket.getOutputStream();
 			
-			PrintWriter writer = new PrintWriter(out, true); // FILE//Sender//Sender_Color//Reciever//File_Name
-			writer.println("FILE//" + username + "//#" + colorToHex(userColor) + "//" + "");
+			PrintWriter writer = new PrintWriter(out, true); // \\f Reciever File_Name
+			
+			String msg = "\\f " + userToSendTo + " " + fileToSend.getName() + " " + fileToSend.length();
+			
+			writer.println(msg);
 			
 			Thread.sleep(10);
 			
