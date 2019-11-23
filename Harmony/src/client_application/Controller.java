@@ -1,13 +1,12 @@
 package client_application;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -58,6 +57,7 @@ public class Controller
 	@FXML private TextFlow mainTextFlow;
 	@FXML private ScrollPane mainTxtScrollPane;
 	@FXML private TextArea enterMsgTextArea;
+	@FXML private TextFlow peopleTextFlow;
 	@FXML private Pane fileTransferPanel;
 	@FXML private ComboBox<String> fileUserSelect;
 	
@@ -102,7 +102,7 @@ public class Controller
 		if (roomNum != 0)
 		{
 			Main.clearRoom();
-			Main.leaveServer();
+			Main.sendMsg("\\e -1");
 		}
 
 		roomNum = 0;
@@ -114,6 +114,10 @@ public class Controller
 		selectedRoomLine.setLayoutX(104);
 		selectedRoomLine.setLayoutY(38);
 		menuControls();
+		chatDisplay.setVisible(false);
+		startDisplay.setVisible(true);
+		
+		showStartDisplay();
 	}
 
 	public void connect()
@@ -149,18 +153,23 @@ public class Controller
 		if (!checkAccountDetails())
 			return;
 
-		Main.sendMsg("CHECK_IF_IN_USE//" + usernameField.getText());
+		String username = usernameField.getText();
+		if(username.contains(" "))
+			username.replace(" ", "_");
+			
+		Main.sendMsg("\\checkUse " + username + " " + Main.getHexColor());
 	}
 
-	private boolean joinRoom()
+	private boolean joinRoom(int num)
 	{
 		if (Main.getUsername() == null)
 			return false;
 
-		if (roomNum != 0)
+		roomNum = num;
+		if (roomNum > 0)
 		{
 			Main.clearRoom();
-			Main.leaveServer();
+			Main.sendMsg("\\e " + num);
 
 			try
 			{
@@ -225,10 +234,9 @@ public class Controller
 
 	public void clickRoomOne()
 	{
-		if (!joinRoom())
+		if (!joinRoom(1))
 			return;
 
-		Main.joinServer(1);
 		selectedRoomLine.setLayoutY(138);
 
 		if (Main.getRoomOne() != null)
@@ -239,10 +247,9 @@ public class Controller
 
 	public void clickRoomTwo()
 	{
-		if (!joinRoom())
+		if (!joinRoom(2))
 			return;
 
-		Main.joinServer(2);
 		selectedRoomLine.setLayoutY(238);
 
 		if (Main.getRoomTwo() != null)
@@ -253,10 +260,9 @@ public class Controller
 
 	public void clickRoomThree()
 	{
-		if (!joinRoom())
+		if (!joinRoom(3))
 			return;
 
-		Main.joinServer(3);
 		selectedRoomLine.setLayoutY(338);
 
 		if (Main.getRoomThree() != null)
@@ -284,8 +290,24 @@ public class Controller
 						enterMsgTextArea.clear();
 						return;
 					}
-
-					Main.sendMsg(roomNum + "//" + msg); // TODO Add cmd initializers
+					
+					Main.sendMsg(msg);
+					enterMsgTextArea.clear();
+					
+					if(msg.startsWith("\\x"))
+					{
+						try
+						{
+							Thread.sleep(500);
+						}
+						
+						catch(InterruptedException e)
+						{
+							e.printStackTrace();
+						}
+						
+						closeApp();
+					}
 				}
 
 				else if (msg.length() > Main.CHAR_LIMIT)
@@ -301,50 +323,84 @@ public class Controller
 			try
 			{
 				InputStream input = Main.getSocket().getInputStream();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 				
 				while(!Main.getSocket().isClosed())
 				{
-					String msg = reader.readLine();
+					byte[] buffer = new byte[2048];
+					int count = input.read(buffer);
+					String msg = new String(buffer, StandardCharsets.UTF_8).substring(0, count);
 					
-					Platform.runLater(() ->
+					if(msg.startsWith("\\f"))
 					{
-						if(msg.startsWith("FILE//")) // FILE//Sender//Sender_Color//Reciever//File_Name
+						String[] parts = msg.split(" ");  // \f reciever color file_name length
+						
+						try
 						{
-							String[] parts = msg.split("//");
+							String fileName = "";
+							for(int i = 3; i < parts.length - 1; i++)
+								fileName += parts[i] + " ";
 							
-							try
+							fileName = fileName.substring(0, fileName.length() - 1);
+							
+							String extension = fileName.substring(fileName.lastIndexOf("."));
+							fileName = fileName.substring(0, fileName.lastIndexOf("."));
+							
+							File fileToDownload = new File(Main.getDownloadDirPath() + "/" + fileName + extension);
+							
+							int num = 0;
+							while(fileToDownload.exists())
 							{
-								File fileToDownload = new File(Main.getDownloadDirPath() + parts[4]);
-								
-								InputStream in = new FileInputStream(fileToDownload);
-								OutputStream out = Main.getSocket().getOutputStream();
-								byte[] buffer = new byte[3000];
-								
-								int count = 0;
-								while((count = in.read(buffer)) > 0)
-									out.write(buffer, 0, count);
-								
-								in.close();
-								out.close();
-								
-								displayMsg("MSG//" + parts[1] + "//" + parts[2] + "//You Received a New File: " + parts[4]);
+								fileToDownload = new File(Main.getDownloadDirPath() + "/" + fileName + num + extension);
+								num++;
 							}
 							
-							catch(Exception e)
+							fileToDownload.createNewFile();
+							
+							Thread.sleep(1000);
+							OutputStream out = new FileOutputStream(fileToDownload);
+							
+							int length = Integer.parseInt(parts[parts.length - 1]);
+							byte[] fileBuffer = new byte[2048];
+							
+							int byteCount = 0;
+							while((byteCount = input.read(fileBuffer)) > 0)
 							{
-								e.printStackTrace();
+								out.write(fileBuffer, 0, byteCount);
+								length -= byteCount;
+								
+								if(length <= 0)
+									break;
 							}
+							
+							out.close();
+							
+							String sendMsg = parts[1] + "//" + parts[2] + "//You Received a New File: " + fileName + "//" + roomNum;
+							
+							Platform.runLater(() ->
+							{
+								displayMsg(sendMsg);
+							});
 						}
 						
-						else
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
+					}
+					
+					else
+					{
+						Platform.runLater(() ->
+						{
 							displayMsg(msg);
-					});
+						});
+					}
 				}
 			}
 			catch(SocketException ex)
 			{
 				System.out.println("Socket has been closed.");
+				ex.printStackTrace();
 			}
 
 			catch(Exception e)
@@ -353,27 +409,10 @@ public class Controller
 			}
 		}).start();
 	}
-
-	@FXML private TextFlow peopleTextFlow;
-
+	
 	private void addUser(String msg)
 	{
-		String[] parsedMsg = msg.split("//"); // USER//username//#color//room
-		int room = 0;
-
-		try
-		{
-			room = Integer.parseInt(parsedMsg[3]);
-		}
-
-		catch(Exception e)
-		{
-			return;
-		}
-
-		if (Main.isInRoom(parsedMsg[1]) || roomNum != room)
-			return;
-
+		String[] parsedMsg = msg.split("//"); // USER//username//#color
 		String user = parsedMsg[1];
 
 		for(int i = user.length(); i < 25; i++)
@@ -405,37 +444,10 @@ public class Controller
 		Main.removeUserInRoom(indexToRemove / 2);
 	}
 
-	private String dm(String msg)
-	{
-		String[] parsedMsg = msg.split("//");
-
-		String user = Main.getUsername();
-		if (user != null && parsedMsg[1].compareTo(user) != 0)
-			return null;
-
-		else if (msg.startsWith("DM//USER_CHECK//"))
-		{
-			if (parsedMsg[2].compareTo("Yes") == 0)
-				accountInUse.setVisible(true);
-
-			else
-			{
-				loginScreen.setVisible(false);
-				Main.setUsername(usernameField.getText());
-				Main.setTitleMode(TitleMode.SIGNED_IN);
-			}
-
-			return null;
-		}
-
-		else if (parsedMsg[3].compareTo("LIST") == 0) // DM//username//LIST//MSG//Harmony//#F7931E//
-			return parsedMsg[3] + "//" + parsedMsg[4] + "//" + parsedMsg[5] + "//" + Main.getUserList();
-
-		return parsedMsg[2] + "//" + parsedMsg[3] + "//" + parsedMsg[4] + "//" + parsedMsg[5]; // DM//USERNAME_TO_RECEIVE//MSG//USERNAME_OF_SENDER//COLOR_OF_SENDER//MESSAGE
-	}
-
 	private void displayMsg(String msg)
 	{
+		String[] parsedMsg = msg.split("//"); // username_of_sender//#user_color//msg//room_num
+		
 		if (msg.startsWith("USER//"))
 		{
 			addUser(msg);
@@ -448,19 +460,27 @@ public class Controller
 			return;
 		}
 
-		else if (msg.startsWith("DM//"))
+		else if (msg.startsWith("USER_CHECK//")) // USER_CHECK//Answer
 		{
-			String result = dm(msg);
+			if (parsedMsg[1].compareTo("Yes") == 0)
+				accountInUse.setVisible(true);
 
-			if (result == null)
-				return;
-
-			msg = result;
+			else
+			{
+				String username = usernameField.getText();
+				if(username.contains(" "))
+					username.replace(" ", "_");
+				
+				loginScreen.setVisible(false);
+				Main.setUsername(username);
+				Main.setTitleMode(TitleMode.SIGNED_IN);
+				Main.sendMsg("\\u " + username + " " + Main.getHexColor());
+			}
+			
+			return;
 		}
-
-		String[] parsedMsg = msg.split("//"); // MSG//username_of_sender//#user_color//room_num//msg
-
-		Node icon = getUserIcon(parsedMsg[1], parsedMsg[2]);
+		
+		Node icon = getUserIcon(parsedMsg[0], parsedMsg[1]);
 
 		Date curr = new Date();
 		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
@@ -468,19 +488,19 @@ public class Controller
 		date.setStroke(Color.web("#9b9fa1"));
 		date.setFont(Font.font("Arial", FontWeight.THIN, 12));
 
-		Text username = new Text(parsedMsg[1] + " ");
-		username.setFill(Color.web(parsedMsg[2]));
+		Text username = new Text(parsedMsg[0] + " ");
+		username.setFill(Color.web(parsedMsg[1]));
 		username.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
-		TextArea txtMsg = new TextArea(parsedMsg[4] + "\n");
+		TextArea txtMsg = new TextArea(parsedMsg[2] + "\n");
 		txtMsg.setStyle("-fx-background-color: transparent;-fx-text-inner-color: #d7d5d9;");
 		txtMsg.setFont(Font.font("Arial", 14));
 		txtMsg.setMaxWidth(653);
 
-		if (parsedMsg[4].length() <= 50)
+		if (parsedMsg[2].length() <= 50)
 			txtMsg.setMaxHeight(28.3);
 
-		else if (parsedMsg[4].length() <= 100)
+		else if (parsedMsg[2].length() <= 100)
 			txtMsg.setMaxHeight(60);
 
 		else
@@ -582,6 +602,9 @@ public class Controller
 		if (user.length() == 0 || password.length() == 0 || user.compareTo("Harmony") == 0)
 			return false;
 
+		else if(user.contains(" "))
+			user.replace(" ", "_");
+		
 		try
 		{
 			Connection connect = sqliteConnection.dbConnector();

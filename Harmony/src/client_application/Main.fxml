@@ -60,8 +60,8 @@
             </TextArea>
             <Line endX="-100.0" endY="58.0" layoutX="153.0" layoutY="554.0" startX="-100.0" startY="-2.0" stroke="#36393f" />
             <TextFlow fx:id="peopleTextFlow" layoutX="746.0" prefHeight="628.0" prefWidth="200.0" />
-            <Line endX="620.0" endY="-2.0" layoutX="101.0" layoutY="532.0" startX="-100.0" startY="-2.0" stroke="#727373" />
-            <Group layoutX="26.0" layoutY="582.0">
+            <Line endX="620.0" endY="-2.0" layoutX="100.0" layoutY="527.0" startX="-100.0" startY="-2.0" stroke="#727373" />
+            <Group layoutX="26.0" layoutY="582.0" onMouseClicked="#sendFileBtn">
                <children>
                   <Circle fill="#b9bbbe" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
                   <Line endX="-67.0" endY="15.0" layoutX="67.0" layoutY="-8.0" startX="-67.0" startY="2.0" stroke="#40444b" strokeWidth="2.0" />
@@ -69,7 +69,7 @@
                   <Circle fill="WHITE" opacity="0.01" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
                </children>
             </Group>
-            <Pane fx:id="fileTransferPanel" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0">
+            <Pane fx:id="fileTransferPanel" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0" visible="false">
                <children>
                   <Rectangle fill="#2f3136" height="123.0" layoutY="26.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
                   <ComboBox fx:id="fileUserSelect" layoutX="486.0" layoutY="48.0" prefWidth="150.0" promptText="Select a User" />
@@ -78,17 +78,17 @@
                         <Font name="Arial" size="22.0" />
                      </font>
                   </Text>
-                  <Button layoutX="316.0" layoutY="98.0" mnemonicParsing="false" prefWidth="110.0" text="Select File">
+                  <Button layoutX="316.0" layoutY="98.0" mnemonicParsing="false" onMouseClicked="#selectFileBtn" prefWidth="110.0" text="Select File">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font>
                   </Button>
-                  <Button layoutX="195.0" layoutY="98.0" mnemonicParsing="false" prefWidth="110.0" text="Send File">
+                  <Button layoutX="195.0" layoutY="98.0" mnemonicParsing="false" onMouseClicked="#sendFile" prefWidth="110.0" text="Send File">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font>
                   </Button>
-                  <Button layoutX="439.0" layoutY="98.0" mnemonicParsing="false" prefWidth="110.0" text="Cancel">
+                  <Button layoutX="439.0" layoutY="98.0" mnemonicParsing="false" onMouseClicked="#cancelFileSend" prefWidth="110.0" text="Cancel">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font>

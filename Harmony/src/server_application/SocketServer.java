@@ -1,11 +1,9 @@
 package server_application;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -13,20 +11,16 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.Random;
 
-import client_application.ClientData;
+import javafx.scene.paint.Color;
 
 public class SocketServer
 {
 	private Selector selector;
-	private Map<SocketChannel, String> dataMap;
+	private Room roomOne, roomTwo, roomThree, notInRoom;	
 	private InetSocketAddress listeningAddress;
-	private ArrayList<ClientData> userMap;
-	private Map<String, String> userAddRequests;
 	
 	public static void main(String[] args)
 	{
@@ -36,19 +30,22 @@ public class SocketServer
 
 	public SocketServer(int port)
 	{
-		try
-		{
-			listeningAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), port);
-		}
 		
-		catch(UnknownHostException e)
-		{
-			e.printStackTrace();
-		}
-		
-		dataMap = new HashMap<SocketChannel, String>();
-		userMap = new ArrayList<ClientData>();
-		userAddRequests = new HashMap<String, String>();
+		listeningAddress = new InetSocketAddress("localhost", 8345); // For Testing
+//		try
+//		{
+//			listeningAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), port);
+//		}
+//		
+//		catch(UnknownHostException e)
+//		{
+//			e.printStackTrace();
+//		}
+
+		roomOne = new Room();
+		roomTwo = new Room();
+		roomThree = new Room();
+		notInRoom = new Room();
 	}
 
 	public void startServer()
@@ -138,11 +135,49 @@ public class SocketServer
 				msg += new String(data, StandardCharsets.UTF_8);
 				buffer.clear();
 				
-				if(msg.startsWith("FILE//"))
+				if(msg.startsWith("\\f"))
 				{
+					String[] parts = msg.split(" "); // \f Reciever File_Name Size
+					int size = 0;
+					
+//					int fileLength = 0;
+//					String fileLengthStr = "";
+					try
+					{
+						if(parts[parts.length - 1].contains("\r\n"))
+							parts[parts.length - 1] = parts[parts.length - 1].replace("\r\n", "");
+						
+						size = Integer.parseInt(parts[parts.length - 1]);
+						Thread.sleep(10);
+//						
+//						buffer.flip();
+//
+//						data = new byte[buffer.limit()];
+//						buffer.get(data);
+//						fileLengthStr = new String(data, StandardCharsets.UTF_8);
+//						buffer.clear();
+//						
+//						if(fileLengthStr.contains("\r\n"))
+//							fileLengthStr = fileLengthStr.replace("\r\n", "");
+//							
+//						fileLength = Integer.parseInt(fileLengthStr);
+					}
+					
+					catch(Exception e)
+					{
+						e.printStackTrace();
+						return;
+					}
+					
+//					buffer = ByteBuffer.allocate(size);
+//					sentObj = new byte[size];
+//					socketChannel.read(buffer);
+//					buffer.get(sentObj);
+					
+//					buffer = ByteBuffer.allocate(size);
+					Thread.sleep(1000);
 					while((numberRead = socketChannel.read(buffer)) > 0)
 					{
-						System.out.println("in loop");
 						buffer.flip();
 
 						data = new byte[buffer.limit()];
@@ -154,24 +189,73 @@ public class SocketServer
 						sentObj = temp;
 						
 						buffer.clear();
+						
+//						Thread.sleep(100);
 					}
 					
-					if(numberRead == -1)
-						break;
+					if(msg.contains("\r\n"))
+						msg = msg.replace("\r\n", "");					
 					
-					for(Map.Entry<SocketChannel, String> entry : dataMap.entrySet()) 
+					ClientData clientToSendTo = null;
+					clientToSendTo = roomOne.findClientByUsername(parts[1]);
+					
+					if(clientToSendTo == null)
 					{
-						String[] parts = msg.split("//"); // FILE//Sender//Sender_Color//Reciever//File_Name
+						clientToSendTo = roomTwo.findClientByUsername(parts[1]);
 						
-						if(parts[3].compareTo(entry.getValue()) == 0)
+						if(clientToSendTo == null)
+							clientToSendTo = roomThree.findClientByUsername(parts[1]);
+					}
+					
+					if(clientToSendTo != null)
+					{
+						String toSendMsg = "\\f ";
+						
+						if(clientToSendTo.isHarmony()) // Harmony: \\f reciever color file_name length || Non-Harmony: \\f file_name length
+							toSendMsg += clientToSendTo.getUsername() + " " + clientToSendTo.getColor() + " ";
+						
+						for(int i = 2; i < parts.length - 1; i++)
+							toSendMsg += parts[i] + " ";
+						
+//						sentObj = Arrays.copyOfRange(sentObj, 1, sentObj.length);						
+						toSendMsg += sentObj.length;
+						
+						SocketChannel socketToSend = clientToSendTo.getSocketChannel();
+						ByteBuffer bufferToSend = ByteBuffer.wrap(toSendMsg.getBytes(StandardCharsets.UTF_8));
+						socketToSend.write(bufferToSend);
+						bufferToSend.rewind();
+						
+						try
 						{
-							ByteBuffer bufferToSend = ByteBuffer.wrap(sentObj);
-							SocketChannel socket = entry.getKey();
-							socket.write(bufferToSend);
-							bufferToSend.rewind();
-							
-							break;
+							Thread.sleep(1000);
 						}
+						
+						catch(Exception e)
+						{
+							e.printStackTrace();
+							return;
+						}
+						
+						ByteBuffer fileBuffer = ByteBuffer.allocate(sentObj.length);
+						fileBuffer.clear();
+						fileBuffer.put(sentObj);
+						fileBuffer.flip();
+						
+						int totalSent = 0;
+						while(fileBuffer.hasRemaining())
+							totalSent += socketChannel.write(fileBuffer);
+						
+//						ByteBuffer fileBuffer = ByteBuffer.wrap(sentObj);
+//						int totalSent = 0;
+//						int byteCount = 1;
+//						while(byteCount > 0)
+//						{
+//							byteCount = socketToSend.write(fileBuffer);
+//							totalSent += byteCount;
+//						}
+//							
+//						fileBuffer.rewind();
+						System.out.println("File sent.Size: " + totalSent);
 					}
 					
 					return;
@@ -185,28 +269,45 @@ public class SocketServer
 			numberRead = -1;
 		}
 		
-		if(numberRead == -1)
+		if(msg.startsWith("\\x"))
 		{
-			this.dataMap.remove(socketChannel);
-
-			Socket socket = socketChannel.socket();
-			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
-
-			ClientData toFind = new ClientData("", remoteAddress.toString().substring(1));
+			key.cancel();
+			numberRead = -1;
+		}
+		
+		else if(numberRead == -1)
+		{
+			ClientData client = null;
 			
-			int index = userMap.indexOf(toFind);
+			if(roomOne.containsClientBySocketChannel(socketChannel))
+			{
+				client = roomOne.findClientBySocket(socketChannel);
+				roomOne.removeClient(socketChannel);
+			}
 			
-			if(index < 0)
+			else if(roomTwo.containsClientBySocketChannel(socketChannel))
+			{
+				client = roomTwo.findClientBySocket(socketChannel);
+				roomTwo.removeClient(socketChannel);
+			}
+			
+			else if(roomThree.containsClientBySocketChannel(socketChannel))
+			{
+				client = roomThree.findClientBySocket(socketChannel);
+				roomThree.removeClient(socketChannel);
+			}
+			
+			else if(notInRoom.containsClientBySocketChannel(socketChannel))
+				notInRoom.removeClient(socketChannel);
+			
+			if(client == null)
 			{
 				key.cancel();
 				return;
 			}
 			
-			ClientData user = userMap.get(index);
-			userMap.remove(index);
-			userAddRequests.remove(remoteAddress.toString().substring(1));
-			
-			msg = "CLOSED//" + user.getUsername() + "\n";			
+			msg = "CLOSED//" + client.getUsername();
+			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
 			
 			try
 			{
@@ -220,79 +321,338 @@ public class SocketServer
 			}
 			
 			key.cancel();
-		}
-
-		else if(msg.startsWith("LEAVING//"))
-		{
-			String username = msg.substring(9).replace("\r\n", "");
-			
-			Socket socket = socketChannel.socket();
-			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
-
-			userAddRequests.remove(remoteAddress.toString().substring(1));
-			
-			msg = "CLOSED//" + username + "\n";
+			return;
 		}
 		
-		else if(msg.startsWith("CHECK_IF_IN_USE//"))
+		else if(msg.startsWith("\\l")) // List users in the room
 		{
+			Room curr = findWhichRoom(socketChannel);
+			
+			if(curr.equals(notInRoom))
+				return;
+			
+			ArrayList<ClientData> clientsInRoom = curr.getClientList();
+			
+			String userList = "";
+			for(ClientData client : clientsInRoom)
+				userList += client.getUsername() + ", ";
+			
+			userList = userList.substring(0, userList.length() - 2);
+			
+			ClientData client = curr.findClientBySocket(socketChannel);
+			if(client.isHarmony())
+				userList = "Harmony//#F7931E//" + userList + "//" + findRoomNum(curr);
+			
+			try
+			{
+				ByteBuffer sendBuffer = ByteBuffer.wrap(userList.getBytes(StandardCharsets.UTF_8));
+				socketChannel.write(sendBuffer);
+				sendBuffer.rewind();
+				System.out.println("Msg sent");
+			}
+			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
+			return;
+		}
+		
+		else if(msg.startsWith("\\r")) // List the room names
+		{
+			Room curr = findWhichRoom(socketChannel);
+			
+			if(curr.equals(notInRoom))
+				return;
+			
+			msg = "One, Two, Three";
+			ClientData client = curr.findClientBySocket(socketChannel);
+			if(client.isHarmony())
+				msg = "Harmony//#F7931E//" + msg + "//" + findRoomNum(curr);
+			
+			try
+			{
+				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+				socketChannel.write(sendBuffer);
+				sendBuffer.rewind();
+				System.out.println("Msg sent");
+			}
+			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
+			return;
+		}
+		
+		else if(msg.startsWith("\\e")) // Change Room. \\e RoomNum
+		{
+			Room curr = findWhichRoom(socketChannel);
+			
+			ClientData client = curr.findClientBySocket(socketChannel);
+			
+			if(curr.equals(roomOne))
+				roomOne.removeClient(socketChannel);
+			
+			else if(curr.equals(roomTwo))
+				roomTwo.removeClient(socketChannel);
+			
+			else if(curr.equals(roomThree))
+				roomThree.removeClient(socketChannel);
+			
+			else if(curr.equals(notInRoom))
+				notInRoom.removeClient(socketChannel);
+			
+			String[] parts = msg.split(" ");
+			String requestedRoom = parts[1].toLowerCase();
+			
+			if(requestedRoom.contains("\r\n"))
+				requestedRoom = requestedRoom.replace("\r\n", "");
+			
+			switch(requestedRoom)
+			{
+				case "-1":
+					notInRoom.addClient(client);
+					break;
+				
+				case "one":
+					
+				case "1":
+					roomOne.addClient(client);
+					msg = "Server: Joined Room One.";
+					break;
+					
+				case "two":
+					
+				case "2":
+					roomTwo.addClient(client);
+					msg = "Server: Joined Room Two.";
+					break;
+					
+				case "three":
+					
+				case "3":
+					roomThree.addClient(client);
+					msg = "Server: Joined Room Three.";
+					break;
+					
+				default:
+					msg = "Server: Incorrect room name.";
+			}
+			
+			try
+			{
+				if(!client.isHarmony())
+				{
+					ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+					socketChannel.write(sendBuffer);
+					sendBuffer.rewind();
+					System.out.println("Msg sent");
+				}
+			}
+			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
+			msg = "CLOSED//" + client.getUsername();
+			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
+			msg = "USER//" + client.getUsername() + "//" + client.getColor();
+			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
+			
+			return;
+		}
+		
+		else if(msg.startsWith("\\w")) // What room is the client in
+		{
+			Room curr = findWhichRoom(socketChannel);
+			
+			if(curr.equals(roomOne))
+				msg = "Server: You're in Room One.";
+			
+			else if(curr.equals(roomTwo))
+				msg = "Server: You're in Room Two.";
+			
+			else if(curr.equals(roomThree))
+				msg = "Server: You're in Room Three.";
+			
+			else if(curr.equals(notInRoom))
+				msg = "Server: You're not in a Room.";
+			
+			ClientData client = curr.findClientBySocket(socketChannel);
+			if(client.isHarmony())
+				msg = "Harmony//#F7931E//" + msg.substring(8) + "//" + findRoomNum(curr);
+			
+			try
+			{
+				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+				socketChannel.write(sendBuffer);
+				sendBuffer.rewind();
+				System.out.println("Msg sent");
+			}
+			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
+			return;
+		}
+		
+		else if(msg.startsWith("\\dm")) // DM User: \\dm userToSendTo msg
+		{
+			String[] parts = msg.split(" ");
+			
+			if(parts.length < 2)
+				return;
+			
+			msg = "";
+			for(int i = 2; i < parts.length; i++)
+				msg += parts[i] + " ";
+			
+			msg = msg.substring(0, msg.length() - 1);
+			
+			Room curr = findWhichRoom(socketChannel);
+			ClientData clientToSendTo = curr.findClientByUsername(parts[1]);
+			ClientData client = curr.findClientBySocket(socketChannel);
+			
+			if(clientToSendTo == null)
+				return;
+			
+			else if(clientToSendTo.isHarmony())
+				msg = client.getUsername() + "//" + client.getColor() + "//" + msg + "//" + findRoomNum(curr);
+			
+			SocketChannel socketToSendTo = clientToSendTo.getSocketChannel();
+			
+			try
+			{
+				ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+				socketToSendTo.write(bufferSend);
+				bufferSend.rewind();
+				System.out.println("Msg sent");
+			}
+			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
+			return;
+		}
+		
+		else if(msg.startsWith("\\u")) // Link Username. Non-Harmony: \\u username, Harmony: \\u username #color (NOTE: it should only be one slash, but java accepts unicode)
+		{
+			ClientData clientToAdd = null;
 			Socket socket = socketChannel.socket();
 			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
 			
-			String username = msg.substring(17).replace("\r\n", "");			
-			ClientData toFind = new ClientData(username, "");
+			String[] parts = msg.split(" ");
 			
-			if(userMap.indexOf(toFind) < 0) // Account not in use
+			if(parts.length == 2) // Non-Harmony
+				clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], getRandomColor(), false);
+			
+			else if(parts.length == 3) // Harmony
+				clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], parts[2].replace("\r\n", ""), true);
+			
+			notInRoom.addClient(clientToAdd);
+			return;
+		}
+		
+		else if(msg.startsWith("\\checkUse")) // Only used by Harmony Clients
+		{
+			String[] parts = msg.split(" ");
+			String username = parts[1];
+			
+			if(roomOne.findClientByUsername(username) == null && roomTwo.findClientByUsername(username) == null &&
+			   roomThree.findClientByUsername(username) == null && notInRoom.findClientByUsername(username) == null)
 			{
-				userMap.add(new ClientData(username, remoteAddress.toString().substring(1)));
-				dataMap.put(socketChannel, username);
-				
-				msg = "DM//USER_CHECK//No\n";
+				msg = "USER_CHECK//No";
 			}
 			
 			else
-				msg = "DM//USER_CHECK//Yes\n";
+				msg = "USER_CHECK//Yes";
+			
+			try
+			{
+				ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+				socketChannel.write(bufferSend);
+				bufferSend.rewind();
+				System.out.println("Msg sent");
+			}
+			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
+			return;
 		}
 		
-		else if(msg.startsWith("USER//"))
-		{
-			Socket socket = socketChannel.socket();
-			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
-			
-			for(Map.Entry<String, String> entry : userAddRequests.entrySet())
-				sendMsg(entry.getValue().getBytes(StandardCharsets.UTF_8));
-			
-			userAddRequests.put(remoteAddress.toString().substring(1), msg);
-		}
+		Room curr = null;
 		
-		else if(msg.startsWith("LIST//")) // TODO Add room check / Change to be client written
-		{
-			String username = msg.substring(6);
-			
-			msg = "DM//" + username + "//MSG//Harmony//#F7931E//";
-			for(Map.Entry<String, String> entry : userAddRequests.entrySet())
-				msg += entry.getValue()+ ", ";
-			
-			msg = msg.substring(0, msg.length() - 1) + "\n";
-		}
-			
-		sendMsg(msg.getBytes(StandardCharsets.UTF_8));
+		if(roomOne.containsClientBySocketChannel(socketChannel))
+			curr = roomOne;
+		
+		else if(roomTwo.containsClientBySocketChannel(socketChannel))
+			curr = roomTwo;
+		
+		else if(roomThree.containsClientBySocketChannel(socketChannel))
+			curr = roomThree;
+		
+		sendMsg(msg.getBytes(StandardCharsets.UTF_8), curr, curr.findClientBySocket(socketChannel));
 	}
 
-	private void sendMsg(byte[] msg)
+	private void sendMsg(byte[] msg, Room curr, ClientData sender)
 	{
 		try
 		{
-			ByteBuffer buffer = ByteBuffer.wrap(msg);
+			if(curr == null)
+				return;
+			
 			System.out.println("Message: " + new String(msg, StandardCharsets.UTF_8));
+			
 			for(SelectionKey key : selector.keys())
 			{
 				if(key.isValid() && key.channel() instanceof SocketChannel)
 				{
+					boolean send = false;
+					
 					SocketChannel socketChannel = (SocketChannel) key.channel();
-					socketChannel.write(buffer);
-					buffer.rewind();
-					System.out.println("Msg sent");
+					Room clientRoom = findWhichRoom(socketChannel);
+					ClientData client = clientRoom.findClientBySocket(socketChannel);
+					
+					if(clientRoom.equals(notInRoom))
+						continue;
+					
+					if(!client.isHarmony() && clientRoom.equals(curr)) // Is in room and isn't a Harmony Client
+						send = true;
+					
+					else if(client.isHarmony()) // Is Harmony
+					{
+						int roomNum = findRoomNum(curr);
+							
+						if(roomNum != -1)
+						{
+							String fixedMsg = new String(msg, StandardCharsets.UTF_8);
+							if(fixedMsg.contains("\r\n"))
+								fixedMsg = fixedMsg.replace("\r\n", "");
+							
+							String newMsg = client.getUsername() + "//" + client.getColor() + "//" + fixedMsg + "//" + roomNum;
+							msg = newMsg.getBytes(StandardCharsets.UTF_8);
+							send = true;
+						}
+					}
+					
+					if(send)
+					{
+						ByteBuffer buffer = ByteBuffer.wrap(msg);
+						socketChannel.write(buffer);
+						buffer.rewind();
+						System.out.println("Msg sent");
+					}
 				}
 			}
 		}
@@ -301,5 +661,107 @@ public class SocketServer
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	private void sendMsgToHarmonyClients(byte[] msg)
+	{
+		try
+		{			
+			System.out.println("Message: " + new String(msg, StandardCharsets.UTF_8));
+			
+			for(SelectionKey key : selector.keys())
+			{
+				if(key.isValid() && key.channel() instanceof SocketChannel)
+				{
+					SocketChannel socketChannel = (SocketChannel) key.channel();
+					Room clientRoom = findWhichRoom(socketChannel);
+					ClientData client = clientRoom.findClientBySocket(socketChannel);
+					
+					if(clientRoom.equals(notInRoom))
+						continue;
+					
+					if(client.isHarmony())
+					{
+						ByteBuffer buffer = ByteBuffer.wrap(msg);
+						socketChannel.write(buffer);
+						buffer.rewind();
+						System.out.println("Msg sent");
+					}
+				}
+			}
+		}
+
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private Room findWhichRoom(SocketChannel socketChannel)
+	{
+		if(roomOne.containsClientBySocketChannel(socketChannel))
+			return roomOne;
+		
+		else if(roomTwo.containsClientBySocketChannel(socketChannel))
+			return roomTwo;
+		
+		else if(roomThree.containsClientBySocketChannel(socketChannel))
+			return roomThree;
+		
+		else if(notInRoom.containsClientBySocketChannel(socketChannel))
+			return notInRoom;
+		
+		return null;
+	}
+	
+	private int findRoomNum(Room room)
+	{
+		int roomNum = -1;
+		if(room.equals(roomOne))
+			roomNum = 1;
+		
+		else if(room.equals(roomTwo))
+			roomNum = 2;
+		
+		else if(room.equals(roomThree))
+			roomNum = 3;
+		
+		return roomNum;
+	}
+	
+	private String getRandomColor()
+	{
+		Random r = new Random();
+		Color userColor = Color.rgb(r.nextInt(256), r.nextInt(256), r.nextInt(256));
+		
+		String hex1, hex2;
+		
+		hex1 = Integer.toHexString(userColor.hashCode()).toUpperCase();
+		
+		switch(hex1.length())
+		{
+			case 2:
+				hex2 = "000000";
+		        break;
+		    case 3:
+		        hex2 = String.format("00000%s", hex1.substring(0,1));
+		        break;
+		    case 4:
+		        hex2 = String.format("0000%s", hex1.substring(0,2));
+		        break;
+		    case 5:
+		        hex2 = String.format("000%s", hex1.substring(0,3));
+		        break;
+		    case 6:
+		        hex2 = String.format("00%s", hex1.substring(0,4));
+		        break;
+		    case 7:
+		        hex2 = String.format("0%s", hex1.substring(0,5));
+		        break;
+		    default:
+		        hex2 = hex1.substring(0, 6);
+		    }
+		
+		    return "#" + hex2;
 	}
 }
