@@ -351,7 +351,7 @@ public class Main extends Application
 			return false;
 		}
 		
-		try (Socket socket = new Socket("localhost", 8345))
+		try
 		{
 			InputStream in = new FileInputStream(fileToSend);
 			OutputStream out = socket.getOutputStream();
@@ -365,14 +365,13 @@ public class Main extends Application
 			Thread.sleep(10);
 			
 			byte[] buffer = new byte[3000];
-			out.write(1);
 			int count = 0;
 			while((count = in.read(buffer)) > 0)
 				out.write(buffer, 0, count);
 			
-			writer.close();
+//			writer.close();
 			in.close();
-			out.close();
+//			out.close();
 			
 			return true;
 		}

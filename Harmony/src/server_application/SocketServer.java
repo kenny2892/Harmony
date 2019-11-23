@@ -137,10 +137,17 @@ public class SocketServer
 				
 				if(msg.startsWith("\\f"))
 				{
+					String[] parts = msg.split(" "); // \f Reciever File_Name Size
+					int size = 0;
+					
 //					int fileLength = 0;
 //					String fileLengthStr = "";
 					try
 					{
+						if(parts[parts.length - 1].contains("\r\n"))
+							parts[parts.length - 1] = parts[parts.length - 1].replace("\r\n", "");
+						
+						size = Integer.parseInt(parts[parts.length - 1]);
 						Thread.sleep(10);
 //						
 //						buffer.flip();
@@ -161,10 +168,16 @@ public class SocketServer
 						e.printStackTrace();
 						return;
 					}
-//					
+					
+//					buffer = ByteBuffer.allocate(size);
+//					sentObj = new byte[size];
+//					socketChannel.read(buffer);
+//					buffer.get(sentObj);
+					
+//					buffer = ByteBuffer.allocate(size);
+					Thread.sleep(1000);
 					while((numberRead = socketChannel.read(buffer)) > 0)
 					{
-						System.out.println("in loop");
 						buffer.flip();
 
 						data = new byte[buffer.limit()];
@@ -176,12 +189,12 @@ public class SocketServer
 						sentObj = temp;
 						
 						buffer.clear();
+						
+//						Thread.sleep(100);
 					}
 					
 					if(msg.contains("\r\n"))
-						msg = msg.replace("\r\n", "");
-					
-					String[] parts = msg.split(" "); // \f Reciever File_Name
+						msg = msg.replace("\r\n", "");					
 					
 					ClientData clientToSendTo = null;
 					clientToSendTo = roomOne.findClientByUsername(parts[1]);
@@ -204,6 +217,7 @@ public class SocketServer
 						for(int i = 2; i < parts.length - 1; i++)
 							toSendMsg += parts[i] + " ";
 						
+//						sentObj = Arrays.copyOfRange(sentObj, 1, sentObj.length);						
 						toSendMsg += sentObj.length;
 						
 						SocketChannel socketToSend = clientToSendTo.getSocketChannel();
@@ -211,21 +225,37 @@ public class SocketServer
 						socketToSend.write(bufferToSend);
 						bufferToSend.rewind();
 						
-//						try
-//						{
-//							Thread.sleep(1000);
-//						}
-//						
-//						catch(Exception e)
-//						{
-//							e.printStackTrace();
-//							return;
-//						}
+						try
+						{
+							Thread.sleep(1000);
+						}
 						
-						ByteBuffer fileBuffer = ByteBuffer.wrap(sentObj);
-						socketToSend.write(fileBuffer);
-						fileBuffer.rewind();
-						System.out.println("File sent");
+						catch(Exception e)
+						{
+							e.printStackTrace();
+							return;
+						}
+						
+						ByteBuffer fileBuffer = ByteBuffer.allocate(sentObj.length);
+						fileBuffer.clear();
+						fileBuffer.put(sentObj);
+						fileBuffer.flip();
+						
+						int totalSent = 0;
+						while(fileBuffer.hasRemaining())
+							totalSent += socketChannel.write(fileBuffer);
+						
+//						ByteBuffer fileBuffer = ByteBuffer.wrap(sentObj);
+//						int totalSent = 0;
+//						int byteCount = 1;
+//						while(byteCount > 0)
+//						{
+//							byteCount = socketToSend.write(fileBuffer);
+//							totalSent += byteCount;
+//						}
+//							
+//						fileBuffer.rewind();
+						System.out.println("File sent.Size: " + totalSent);
 					}
 					
 					return;

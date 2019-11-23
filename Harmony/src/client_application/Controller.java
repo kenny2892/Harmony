@@ -1,17 +1,11 @@
 package client_application;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -326,23 +320,22 @@ public class Controller
 	{
 		new Thread(() ->
 		{
-			while(!Main.getSocket().isClosed())
+			try
 			{
-				Platform.runLater(() ->
+				InputStream input = Main.getSocket().getInputStream();
+				
+				while(!Main.getSocket().isClosed())
 				{
-					try
+					byte[] buffer = new byte[2048];
+					int count = input.read(buffer);
+					String msg = new String(buffer, StandardCharsets.UTF_8).substring(0, count);
+					
+					if(msg.startsWith("\\f"))
 					{
-						InputStream input = Main.getSocket().getInputStream();
-						byte[] buffer = new byte[1024];
-						int count = input.read(buffer);
+						String[] parts = msg.split(" ");  // \f reciever color file_name length
 						
-						String msg = new String(buffer, StandardCharsets.UTF_8);
-						msg = msg.substring(0, count);
-						
-						if(msg.startsWith("\\f")) // \f reciever color file_name length
+						try
 						{
-							String[] parts = msg.split(" ");
-							
 							String fileName = "";
 							for(int i = 3; i < parts.length - 1; i++)
 								fileName += parts[i] + " ";
@@ -363,35 +356,56 @@ public class Controller
 							
 							fileToDownload.createNewFile();
 							
+							Thread.sleep(1000);
 							OutputStream out = new FileOutputStream(fileToDownload);
 							
 							int length = Integer.parseInt(parts[parts.length - 1]);
-							byte[] fileBuffer = new byte[length];
-
-							int fileCount = 0;
-							while((fileCount = input.read(fileBuffer)) > 0)
-								out.write(fileBuffer, 0, fileCount);
+							byte[] fileBuffer = new byte[2048];
+							
+							int byteCount = 0;
+							while((byteCount = input.read(fileBuffer)) > 0)
+							{
+								out.write(fileBuffer, 0, byteCount);
+								length -= byteCount;
+								
+								if(length <= 0)
+									break;
+							}
 							
 							out.close();
 							
-							displayMsg(parts[1] + "//" + parts[2] + "//You Received a New File: " + fileName + "//" + roomNum);
+							String sendMsg = parts[1] + "//" + parts[2] + "//You Received a New File: " + fileName + "//" + roomNum;
+							
+							Platform.runLater(() ->
+							{
+								displayMsg(sendMsg);
+							});
 						}
 						
-						else
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
+					}
+					
+					else
+					{
+						Platform.runLater(() ->
+						{
 							displayMsg(msg);
+						});
 					}
-					
-					catch(IOException ex)
-					{
-						System.out.println("Socket Closed");
-						ex.printStackTrace();
-					}
-					
-					catch(Exception e)
-					{
-						e.printStackTrace();
-					}
-				});
+				}
+			}
+			catch(SocketException ex)
+			{
+				System.out.println("Socket has been closed.");
+				ex.printStackTrace();
+			}
+
+			catch(Exception e)
+			{
+				e.printStackTrace();
 			}
 		}).start();
 	}
