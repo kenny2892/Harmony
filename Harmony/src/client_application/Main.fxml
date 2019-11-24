@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
@@ -31,9 +32,9 @@
             <Image url="@../resources/Icon%20Text%20-%20Grey.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="startRoomIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="32.0" onMouseClicked="#clickStartRoom" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="startRoomIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="32.0" onMouseClicked="#clickStartRoom" onMouseEntered="#startEnter" onMouseExited="#startExit" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../resources/Test%20Room%20Icon.png" />
+            <Image url="@../resources/room%20icons/Start_Room.png" />
          </image>
       </ImageView>
       <Rectangle fill="#36393f" height="60.0" layoutX="302.0" layoutY="23.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="978.0" />
@@ -45,15 +46,15 @@
       <Line fx:id="minimizeIcon" endX="-88.0" endY="-3.814697265625E-6" layoutX="1339.0" layoutY="11.0" startX="-104.5" startY="-3.814697265625E-6" stroke="#b9bbbe" />
       <Rectangle fx:id="minimizeHitBox" fill="#202225" height="23.0" layoutX="1230.0" onMouseClicked="#minimizeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
       <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="1255.0" onMouseClicked="#closeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
-      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@application.css" visible="false">
+      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@chatDisplay.css" visible="false">
          <children>
-            <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@application.css">
+            <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@chatDisplay.css">
                <content>
-                  <TextFlow fx:id="mainTextFlow" prefHeight="509.0" prefWidth="725.0" stylesheets="@application.css" />
+                  <TextFlow fx:id="mainTextFlow" prefHeight="509.0" prefWidth="725.0" stylesheets="@chatDisplay.css" />
                </content>
             </ScrollPane>
             <Rectangle arcHeight="10.0" arcWidth="10.0" fill="#40444b" height="60.0" layoutY="552.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="722.0" />
-            <TextArea fx:id="enterMsgTextArea" layoutX="60.0" layoutY="564.0" prefHeight="44.0" prefWidth="653.0" promptText="Message #general" stylesheets="@application.css" wrapText="true">
+            <TextArea fx:id="enterMsgTextArea" layoutX="60.0" layoutY="564.0" prefHeight="44.0" prefWidth="653.0" promptText="Message" stylesheets="@chatDisplay.css" wrapText="true">
                <font>
                   <Font name="Arial" size="14.0" />
                </font>
@@ -69,7 +70,7 @@
                   <Circle fill="WHITE" opacity="0.01" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
                </children>
             </Group>
-            <Pane fx:id="fileTransferPanel" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0" visible="false">
+            <Pane fx:id="fileTransferPane" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0" visible="false">
                <children>
                   <Rectangle fill="#2f3136" height="123.0" layoutY="26.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
                   <ComboBox fx:id="fileUserSelect" layoutX="486.0" layoutY="48.0" prefWidth="150.0" promptText="Select a User" />
@@ -95,6 +96,11 @@
                   </Button>
                </children>
             </Pane>
+            <Text fx:id="msgCountTxt" fill="#d7d5d9" layoutX="-12.0" layoutY="-19.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Message Count: 0" textAlignment="RIGHT">
+               <font>
+                  <Font name="Arial" size="34.0" />
+               </font>
+            </Text>
          </children>
       </Group>
       <Line endX="25.0" layoutX="51.0" layoutY="121.0" startX="-25.0" stroke="#2f3136" />
@@ -104,17 +110,17 @@
       <Line fx:id="selectedRoomLine" endX="-100.0" endY="65.0" layoutX="104.0" layoutY="138.0" startX="-100.0" stroke="WHITE" strokeWidth="7.0" />
       <ImageView fx:id="roomOneIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="132.0" onMouseClicked="#clickRoomOne" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../resources/Test%20Room%20Icon.png" />
+            <Image url="@../resources/room%20icons/Room_1.png" />
          </image>
       </ImageView>
       <ImageView fx:id="roomTwoIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="232.0" onMouseClicked="#clickRoomTwo" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../resources/Test%20Room%20Icon.png" />
+            <Image url="@../resources/room%20icons/Room_2.png" />
          </image>
       </ImageView>
       <ImageView fx:id="roomThreeIcon" fitHeight="78.0" fitWidth="78.0" layoutX="14.0" layoutY="332.0" onMouseClicked="#clickRoomThree" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../resources/Test%20Room%20Icon.png" />
+            <Image url="@../resources/room%20icons/Room_3.png" />
          </image>
       </ImageView>
       <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0">
@@ -135,9 +141,9 @@
                   <Font name="Arial" size="64.0" />
                </font>
             </Text>
-            <Pane fx:id="titlePanel" layoutX="122.0" layoutY="275.0" visible="false">
+            <Pane fx:id="titlePane" layoutX="122.0" layoutY="275.0" prefWidth="422.0">
                <children>
-                  <Group fx:id="serverScreen" layoutX="16.0" layoutY="9.09375">
+                  <Group fx:id="serverScreen" layoutX="16.0" layoutY="9.09375" visible="false">
                      <children>
                         <TextField fx:id="ipAddressField" layoutX="63.0" layoutY="52.453125" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
                         <Text fill="WHITE" layoutY="41.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Server IP Address">
@@ -190,18 +196,18 @@
                         </Button>
                      </children>
                   </Group>
-                  <Group fx:id="signedInScreen" layoutX="123.0" layoutY="267.0">
+                  <Group fx:id="signedInScreen" layoutX="78.0" layoutY="-2.0">
                      <children>
-                        <Button mnemonicParsing="false" text="Change Account">
+                        <Hyperlink fx:id="githubLink" onAction="#openGitHub" style="-fx-border-color: null; -fx-border-style: solid; -fx-border-width: 0px;" text="GitHub Link" underline="true">
                            <font>
-                              <Font name="Arial" size="20.0" />
+                              <Font name="Arial" size="46.0" />
                            </font>
-                        </Button>
+                        </Hyperlink>
                      </children>
                   </Group>
                </children>
             </Pane>
-            <Pane fx:id="settingsPanel" layoutX="-132.0" layoutY="232.0" prefHeight="394.0" prefWidth="944.0">
+            <Pane fx:id="settingsPane" layoutX="-132.0" layoutY="232.0" prefHeight="394.0" prefWidth="944.0" visible="false">
                <children>
                   <ColorPicker fx:id="userColorPicker" layoutX="413.0" layoutY="131.0" onAction="#updateIconPreview" prefHeight="30.0" prefWidth="118.0" />
                   <Text fill="WHITE" layoutX="373.0" layoutY="118.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Color:" textAlignment="CENTER">

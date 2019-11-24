@@ -27,6 +27,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
@@ -63,14 +64,15 @@ public class Controller
 	@FXML private ScrollPane mainTxtScrollPane;
 	@FXML private TextArea enterMsgTextArea;
 	@FXML private TextFlow peopleTextFlow;
-	@FXML private Pane fileTransferPanel;
+	@FXML private Pane fileTransferPane;
 	@FXML private ComboBox<String> fileUserSelect;
+	@FXML private Text msgCountTxt;
 	
 	@FXML private Group serverScreen;
 	@FXML private Group loginScreen;
 	@FXML private Group signedInScreen;
-	@FXML private Pane titlePanel;
-	@FXML private Pane settingsPanel;
+	@FXML private Pane titlePane;
+	@FXML private Pane settingsPane;
 	@FXML private Rectangle titleClicked;
 	@FXML private Rectangle titleHover;
 	@FXML private Rectangle settingsClicked;
@@ -96,11 +98,9 @@ public class Controller
 	@FXML private Pane userIconPane;
 	@FXML private Rectangle settingsHitBox;
 	@FXML private Rectangle titleHitBox;
-
-	private String serverAddress;
-	private int serverPort;
+	@FXML private Hyperlink githubLink;
+	
 	private int roomNum;
-	private int msgCount = 0;
 	private String[] roomNames;
 	
 	public void initialize()
@@ -114,7 +114,13 @@ public class Controller
 	public void clickStartRoom()
 	{
 		selectedRoomLine.setLayoutX(104);
-		selectedRoomLine.setLayoutY(38);		
+		selectedRoomLine.setLayoutY(38);
+		
+		titleClicked.setVisible(false);
+		titleHover.setVisible(false);
+		settingsClicked.setVisible(false);
+		settingsHover.setVisible(false);
+		
 		showStartDisplay();
 
 		if (roomNum != 0)
@@ -124,6 +130,7 @@ public class Controller
 		}
 
 		roomNum = 0;
+		
 		peopleTextFlow.getChildren().clear();
 	}
 
@@ -140,7 +147,7 @@ public class Controller
 
 	public void connect()
 	{
-		serverAddress = ipAddressField.getText();
+		String serverAddress = ipAddressField.getText();
 		String portAsStr = portField.getText();
 
 		if (serverAddress.length() == 0 || portAsStr.length() == 0)
@@ -149,9 +156,19 @@ public class Controller
 			return;
 		}
 
-		serverPort = Integer.parseInt(portField.getText());
+		int serverPort = -1;
+		
+		try
+		{
+			serverPort = Integer.parseInt(portField.getText());
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 
-		if (!Main.startConnection(serverAddress, serverPort))
+		if (serverPort == -1 || !Main.startConnection(serverAddress, serverPort))
 		{
 			badConnection.setVisible(true);
 			return;
@@ -176,7 +193,7 @@ public class Controller
 		if(username.contains(" "))
 			username.replace(" ", "_");
 			
-		Main.sendMsg("\\checkUse " + username + " " + Main.getHexColor());
+		Main.sendMsg("\\checkUser " + username + " " + Main.getHexColor());
 	}
 
 	private boolean joinRoom(int num)
@@ -224,10 +241,13 @@ public class Controller
 		loginScreen.setVisible(false);
 		startDisplay.setVisible(false);
 		chatDisplay.setVisible(true);
-		fileTransferPanel.setVisible(false);
+		fileTransferPane.setVisible(false);
 
 		peopleTextFlow.getChildren().clear();
 		mainTextFlow.getChildren().clear();
+		
+		startRoomIcon.setImage(new Image(getClass().getResource("/resources/room icons/Start_Room.png").toExternalForm()));
+		msgCountTxt.setText("Message Count: " + Main.getRoomMsgCount(this.roomNum));
 		return true;
 	}
 	
@@ -236,18 +256,13 @@ public class Controller
 		startDisplay.setVisible(true);
 		chatDisplay.setVisible(false);
 		
-		titleClicked.setVisible(false);
-		titleHover.setVisible(false);
-		settingsClicked.setVisible(false);
-		settingsHover.setVisible(false);
-		titlePanel.setVisible(false);
-		settingsPanel.setVisible(false);
-		
 		if(Main.getStartMode() == StartMode.TITLE || Main.getUsername() == null)
 			titleMenu();
 		
 		else
 			settingsMenu();
+		
+		startRoomIcon.setImage(new Image(getClass().getResource("/resources/room icons/Start_Room_Highlight.png").toExternalForm()));
 	}
 
 	public void clickRoomOne()
@@ -307,6 +322,33 @@ public class Controller
 					{
 						enterMsgTextArea.clear();
 						return;
+					}
+					
+					if(msg.startsWith("\\e "))
+					{
+						String[] parsedMsg = msg.split(" ");
+						
+						String intendedRoom = parsedMsg[1].toLowerCase();
+						String one = roomNames[0].toLowerCase();
+						String two = roomNames[1].toLowerCase();
+						String three = roomNames[2].toLowerCase();
+						
+						try
+						{
+							if(intendedRoom.compareTo(one) == 0)
+								clickRoomOne();
+							
+							else if(intendedRoom.compareTo(two) == 0)
+								clickRoomTwo();
+							
+							else if(intendedRoom.compareTo(three) == 0)
+								clickRoomThree();
+						}
+						
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
 					}
 					
 					Main.sendMsg(msg);
@@ -522,15 +564,16 @@ public class Controller
 				loginScreen.setVisible(false);
 				Main.setUsername(username);
 				Main.setTitleMode(TitleMode.SIGNED_IN);
+				signedInScreen.setVisible(true);
 				Main.sendMsg("\\u " + username + " " + Main.getHexColor() + " " + Main.getIconID());
 			}
 			
 			return;
 		}
 		
-		msgCount++;
+		Main.msgCountIncrease(this.roomNum);
 		
-		if(msgCount == 1)
+		if(Main.getTotalMsgCount() == 1)
 		{
 			if(msg.contains(", "))
 				parsedMsg = msg.split(", ");
@@ -547,27 +590,38 @@ public class Controller
 			return;
 		}
 		
-		Node icon = getUserIcon(parsedMsg[2], parsedMsg[1], 25);
+		String usernameOfSender = parsedMsg[0];
+		String hexColor = parsedMsg[1];
+		String iconID = parsedMsg[2];
+		String roomNum = parsedMsg[parsedMsg.length - 1];
+		
+		msg = "";
+		for(int i = 3; i < parsedMsg.length - 1; i++)
+			msg += parsedMsg[i] + "//";
+		
+		msg = msg.substring(0, msg.length() - 2);
+		
+		Node icon = getUserIcon(iconID, hexColor, 25);
 
 		Date curr = new Date();
 		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
-		Text date = new Text(dateFormat.format(curr) + "\n");
+		Text date = new Text("      " + dateFormat.format(curr) + "\n");
 		date.setStroke(Color.web("#9b9fa1"));
 		date.setFont(Font.font("Arial", FontWeight.THIN, 12));
 
-		Text username = new Text(parsedMsg[0] + " ");
-		username.setFill(Color.web(parsedMsg[1]));
+		Text username = new Text(usernameOfSender);
+		username.setFill(Color.web(hexColor));
 		username.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
-		TextArea txtMsg = new TextArea(parsedMsg[3] + "\n");
+		TextArea txtMsg = new TextArea(msg + "\n");
 		txtMsg.setStyle("-fx-background-color: transparent;-fx-text-inner-color: #d7d5d9;");
 		txtMsg.setFont(Font.font("Arial", 14));
 		txtMsg.setMaxWidth(653);
 
-		if (parsedMsg[3].length() <= 50)
-			txtMsg.setMaxHeight(28.3);
+		if (msg.length() <= 50)
+			txtMsg.setMaxHeight(45);
 
-		else if (parsedMsg[3].length() <= 100)
+		else if (msg.length() <= 100)
 			txtMsg.setMaxHeight(60);
 
 		else
@@ -591,7 +645,7 @@ public class Controller
 		int intendedRoom = 0;
 		try
 		{
-			intendedRoom = Integer.parseInt(parsedMsg[4]);
+			intendedRoom = Integer.parseInt(roomNum);
 		}
 
 		catch(Exception e)
@@ -615,11 +669,13 @@ public class Controller
 				break;
 		}
 
-		if (intendedRoom == roomNum)
+		if (intendedRoom == this.roomNum)
 		{
 			mainTextFlow.getChildren().addAll(iconFlow, msgFlow, divider);
 			enterMsgTextArea.clear();
 		}
+		
+		msgCountTxt.setText("Message Count: " + Main.getRoomMsgCount(this.roomNum));
 	}
 
 	private Node getUserIcon(String iconStr, String hexColor, int radius)
@@ -662,9 +718,6 @@ public class Controller
 			((ImageView) icon).setFitWidth(radius * 2);
 			((ImageView) icon).setPreserveRatio(true);
 			icon.setClip(mask);
-//			Circle mask = new Circle();
-//			mask.setRadius(radius);
-//			icon.setClip(mask);
 		}
 
 		return icon;
@@ -779,10 +832,17 @@ public class Controller
 	}
 	
 	public void titleMenu()
-	{
+	{		
+		titleClicked.setVisible(false);
+		titleHover.setVisible(false);
+		settingsClicked.setVisible(false);
+		settingsHover.setVisible(false);
+		titlePane.setVisible(false);
+		settingsPane.setVisible(false);
+		
 		Main.setStartMode(StartMode.TITLE);
 		titleClicked.setVisible(true);
-		titlePanel.setVisible(true);
+		titlePane.setVisible(true);
 		
 		serverScreen.setVisible(false);
 		loginScreen.setVisible(false);
@@ -795,7 +855,7 @@ public class Controller
 				break;
 
 			case LOGIN:
-				serverScreen.setVisible(true);
+				loginScreen.setVisible(true);
 				break;
 
 			case SIGNED_IN:
@@ -808,10 +868,17 @@ public class Controller
 	{
 		if (Main.getUsername() == null)
 			return;
+		
+		titleClicked.setVisible(false);
+		titleHover.setVisible(false);
+		settingsClicked.setVisible(false);
+		settingsHover.setVisible(false);
+		titlePane.setVisible(false);
+		settingsPane.setVisible(false);
 
 		Main.setStartMode(StartMode.SETTINGS);
 		settingsClicked.setVisible(true);
-		settingsPanel.setVisible(true);
+		settingsPane.setVisible(true);
 		
 		filePathTxt.setText(Main.getDownloadDirPath());
 		updateIconPreview();
@@ -842,7 +909,23 @@ public class Controller
 		userIconPane.getChildren().clear();
 		userIconPane.getChildren().add(getUserIcon(Main.getIconID() + "", Main.getHexColor(), 51));
 		
-		Main.sendMsg("USER_UPDATE//" + Main.getHexColor() + "//" + Main.getIconID());
+		Main.sendMsg("\\userUpdate " + Main.getHexColor() + " " + Main.getIconID());
+	}
+	
+	public void startEnter()
+	{
+		if(roomNum == 0)
+			return;
+		
+		startRoomIcon.setImage(new Image(getClass().getResource("/resources/room icons/Start_Room_Highlight.png").toExternalForm()));
+	}
+	
+	public void startExit()
+	{
+		if(roomNum == 0)
+			return;
+		
+		startRoomIcon.setImage(new Image(getClass().getResource("/resources/room icons/Start_Room.png").toExternalForm()));
 	}
 	
 	public void titleEnter()
@@ -947,13 +1030,13 @@ public class Controller
 		ObservableList<String> users = FXCollections.observableArrayList(Main.getUserArray());
 		
 		fileUserSelect.setItems(users);
-		fileTransferPanel.setVisible(true);
+		fileTransferPane.setVisible(true);
 	}
 	
 	public void sendFile()
 	{
 		if(Main.sendFile(fileUserSelect.getValue()))
-			fileTransferPanel.setVisible(false);
+			fileTransferPane.setVisible(false);
 		
 		// TODO Else
 	}
@@ -965,7 +1048,12 @@ public class Controller
 	
 	public void cancelFileSend()
 	{
-		fileTransferPanel.setVisible(false);
+		fileTransferPane.setVisible(false);
+	}
+	
+	public void openGitHub()
+	{
+		Main.openGitHub();
 	}
 
 	public void minimizeApp()
