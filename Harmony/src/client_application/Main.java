@@ -126,21 +126,6 @@ public class Main extends Application
 		return false;
 	}
 	
-	public static void joinServer()
-	{
-		try
-		{
-			OutputStream output = socket.getOutputStream();
-			PrintWriter writer = new PrintWriter(output, true);
-			writer.println("\\u" + username + " #" + colorToHex(userColor));
-		}
-		
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-	}
-	
 	public static void sendMsg(String msg)
 	{
 		try

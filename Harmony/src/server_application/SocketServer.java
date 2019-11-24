@@ -263,7 +263,7 @@ public class SocketServer
 			return;
 		}
 		
-		else if(msg.startsWith("\\e")) // Change Room: \\e RoomNum
+		else if(msg.startsWith("\\e ")) // Change Room: \\e RoomNum
 		{
 			changeRoom(msg, socketChannel);			
 			return;
@@ -275,25 +275,25 @@ public class SocketServer
 			return;
 		}
 		
-		else if(msg.startsWith("\\dm")) // DM User: \\dm userToSendTo msg
+		else if(msg.startsWith("\\dm ")) // DM User: \\dm userToSendTo msg
 		{
 			dm(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("\\u")) // Link Username: Non-Harmony: \\u username
+		else if(msg.startsWith("\\u ")) // Link Username: Non-Harmony: \\u username
 		{							  //					 Harmony: \\u username #color iconID
 			registerUser(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("\\checkUser")) // Check if username is in use: \\checkUser username
+		else if(msg.startsWith("\\checkUser ")) // Check if username is in use: \\checkUser username
 		{
 			checkUser(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("\\userUpdate")) // Update User Info: \\userUpdate color iconID
+		else if(msg.startsWith("\\userUpdate ")) // Update User Info: \\userUpdate color iconID
 		{
 			updateUser(msg, socketChannel);			
 			return;
@@ -385,7 +385,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(userList.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println("Msg sent");
+			System.out.println(client.getUsername() + ": User List sent");
 		}
 		
 		catch(Exception e)
@@ -411,7 +411,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println("Msg sent");
+			System.out.println(client.getUsername() + ": List of Rooms Sent");
 		}
 		
 		catch(Exception e)
@@ -483,7 +483,7 @@ public class SocketServer
 				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 				socketChannel.write(sendBuffer);
 				sendBuffer.rewind();
-				System.out.println("Msg sent");
+				System.out.println(client.getUsername() + ": Changed to Room #" + roomNum);
 			}
 		}
 		
@@ -523,7 +523,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println("Msg sent");
+			System.out.println(client.getUsername() + ": What Room are they in");
 		}
 		
 		catch(Exception e)
@@ -562,7 +562,7 @@ public class SocketServer
 			ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketToSendTo.write(bufferSend);
 			bufferSend.rewind();
-			System.out.println("Msg sent");
+			System.out.println(client.getUsername() + ": DM to " + clientToSendTo.getUsername());
 		}
 		
 		catch(Exception e)
@@ -599,7 +599,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println("Msg sent");
+			System.out.println(clientToAdd.getUsername() + ": Has been Registered");
 		}
 		
 		catch(Exception e)
@@ -627,7 +627,7 @@ public class SocketServer
 			ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(bufferSend);
 			bufferSend.rewind();
-			System.out.println("Msg sent");
+			System.out.println(username + ": Did a User Check");
 		}
 		
 		catch(Exception e)
@@ -679,8 +679,6 @@ public class SocketServer
 			if(curr == null)
 				return;
 			
-			System.out.println("Message: " + new String(msg, StandardCharsets.UTF_8));
-			
 			for(SelectionKey key : selector.keys())
 			{
 				if(key.isValid() && key.channel() instanceof SocketChannel)
@@ -718,7 +716,7 @@ public class SocketServer
 						ByteBuffer buffer = ByteBuffer.wrap(msg);
 						socketChannel.write(buffer);
 						buffer.rewind();
-						System.out.println("Msg sent");
+						System.out.println(client.getUsername() + ": Msg Sent");
 					}
 				}
 			}
@@ -762,7 +760,7 @@ public class SocketServer
 						ByteBuffer buffer = ByteBuffer.wrap(msg);
 						socketChannel.write(buffer);
 						buffer.rewind();
-						System.out.println("Msg sent");
+						System.out.println(client.getUsername() + ": Msg Sent");
 					}
 				}
 			}

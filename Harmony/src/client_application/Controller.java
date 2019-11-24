@@ -97,9 +97,7 @@ public class Controller
 	@FXML private Pane userIconPane;
 	@FXML private Rectangle settingsHitBox;
 	@FXML private Rectangle titleHitBox;
-
-	private String serverAddress;
-	private int serverPort;
+	
 	private int roomNum;
 	private String[] roomNames;
 	
@@ -117,9 +115,9 @@ public class Controller
 		selectedRoomLine.setLayoutY(38);
 		
 		titleClicked.setVisible(false);
-		titleHitBox.setVisible(false);
+		titleHover.setVisible(false);
 		settingsClicked.setVisible(false);
-		settingsHitBox.setVisible(false);
+		settingsHover.setVisible(false);
 		
 		showStartDisplay();
 
@@ -147,7 +145,7 @@ public class Controller
 
 	public void connect()
 	{
-		serverAddress = ipAddressField.getText();
+		String serverAddress = ipAddressField.getText();
 		String portAsStr = portField.getText();
 
 		if (serverAddress.length() == 0 || portAsStr.length() == 0)
@@ -156,9 +154,19 @@ public class Controller
 			return;
 		}
 
-		serverPort = Integer.parseInt(portField.getText());
+		int serverPort = -1;
+		
+		try
+		{
+			serverPort = Integer.parseInt(portField.getText());
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 
-		if (!Main.startConnection(serverAddress, serverPort))
+		if (serverPort == -1 || !Main.startConnection(serverAddress, serverPort))
 		{
 			badConnection.setVisible(true);
 			return;
@@ -312,6 +320,33 @@ public class Controller
 					{
 						enterMsgTextArea.clear();
 						return;
+					}
+					
+					if(msg.startsWith("\\e "))
+					{
+						String[] parsedMsg = msg.split(" ");
+						
+						String intendedRoom = parsedMsg[1].toLowerCase();
+						String one = roomNames[0].toLowerCase();
+						String two = roomNames[1].toLowerCase();
+						String three = roomNames[2].toLowerCase();
+						
+						try
+						{
+							if(intendedRoom.compareTo(one) == 0)
+								clickRoomOne();
+							
+							else if(intendedRoom.compareTo(two) == 0)
+								clickRoomTwo();
+							
+							else if(intendedRoom.compareTo(three) == 0)
+								clickRoomThree();
+						}
+						
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
 					}
 					
 					Main.sendMsg(msg);
