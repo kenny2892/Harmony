@@ -139,9 +139,7 @@ public class SocketServer
 				{
 					String[] parts = msg.split(" "); // \f Reciever File_Name Size
 					int size = 0;
-					
-//					int fileLength = 0;
-//					String fileLengthStr = "";
+
 					try
 					{
 						if(parts[parts.length - 1].contains("\r\n"))
@@ -149,18 +147,6 @@ public class SocketServer
 						
 						size = Integer.parseInt(parts[parts.length - 1]);
 						Thread.sleep(10);
-//						
-//						buffer.flip();
-//
-//						data = new byte[buffer.limit()];
-//						buffer.get(data);
-//						fileLengthStr = new String(data, StandardCharsets.UTF_8);
-//						buffer.clear();
-//						
-//						if(fileLengthStr.contains("\r\n"))
-//							fileLengthStr = fileLengthStr.replace("\r\n", "");
-//							
-//						fileLength = Integer.parseInt(fileLengthStr);
 					}
 					
 					catch(Exception e)
@@ -169,12 +155,6 @@ public class SocketServer
 						return;
 					}
 					
-//					buffer = ByteBuffer.allocate(size);
-//					sentObj = new byte[size];
-//					socketChannel.read(buffer);
-//					buffer.get(sentObj);
-					
-//					buffer = ByteBuffer.allocate(size);
 					Thread.sleep(1000);
 					while((numberRead = socketChannel.read(buffer)) > 0)
 					{
@@ -189,8 +169,6 @@ public class SocketServer
 						sentObj = temp;
 						
 						buffer.clear();
-						
-//						Thread.sleep(100);
 					}
 					
 					if(msg.contains("\r\n"))
@@ -216,9 +194,8 @@ public class SocketServer
 						
 						for(int i = 2; i < parts.length - 1; i++)
 							toSendMsg += parts[i] + " ";
-						
-//						sentObj = Arrays.copyOfRange(sentObj, 1, sentObj.length);						
-						toSendMsg += sentObj.length;
+											
+						toSendMsg += size;
 						
 						SocketChannel socketToSend = clientToSendTo.getSocketChannel();
 						ByteBuffer bufferToSend = ByteBuffer.wrap(toSendMsg.getBytes(StandardCharsets.UTF_8));
@@ -245,16 +222,6 @@ public class SocketServer
 						while(fileBuffer.hasRemaining())
 							totalSent += socketChannel.write(fileBuffer);
 						
-//						ByteBuffer fileBuffer = ByteBuffer.wrap(sentObj);
-//						int totalSent = 0;
-//						int byteCount = 1;
-//						while(byteCount > 0)
-//						{
-//							byteCount = socketToSend.write(fileBuffer);
-//							totalSent += byteCount;
-//						}
-//							
-//						fileBuffer.rewind();
 						System.out.println("File sent.Size: " + totalSent);
 					}
 					
@@ -269,391 +236,66 @@ public class SocketServer
 			numberRead = -1;
 		}
 		
-		if(msg.startsWith("\\x"))
+		if(msg.contains("\r\n"))
+			msg = msg.replace("\r\n", "");
+		
+		if(msg.startsWith("\\x")) // Disconnect User: \\x
 		{
 			key.cancel();
 			numberRead = -1;
 		}
 		
-		else if(numberRead == -1)
+		if(numberRead == -1) // Disconnected User
 		{
-			ClientData client = null;
-			
-			if(roomOne.containsClientBySocketChannel(socketChannel))
-			{
-				client = roomOne.findClientBySocket(socketChannel);
-				roomOne.removeClient(socketChannel);
-			}
-			
-			else if(roomTwo.containsClientBySocketChannel(socketChannel))
-			{
-				client = roomTwo.findClientBySocket(socketChannel);
-				roomTwo.removeClient(socketChannel);
-			}
-			
-			else if(roomThree.containsClientBySocketChannel(socketChannel))
-			{
-				client = roomThree.findClientBySocket(socketChannel);
-				roomThree.removeClient(socketChannel);
-			}
-			
-			else if(notInRoom.containsClientBySocketChannel(socketChannel))
-				notInRoom.removeClient(socketChannel);
-			
-			if(client == null)
-			{
-				key.cancel();
-				return;
-			}
-			
-			msg = "CLOSED//" + client.getUsername();
-			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
-			
-			try
-			{
-				if(socketChannel.isConnected())
-					socketChannel.close();
-			}
-			
-			catch(IOException e)
-			{
-				e.printStackTrace();
-			}
-			
-			key.cancel();
+			userDisconnect(msg, socketChannel, key);
 			return;
 		}
 		
-		else if(msg.startsWith("\\l")) // List users in the room
+		else if(msg.startsWith("\\l")) // List users in the room: \\l
 		{
-			Room curr = findWhichRoom(socketChannel);
-			
-			if(curr.equals(notInRoom))
-				return;
-			
-			ArrayList<ClientData> clientsInRoom = curr.getClientList();
-			
-			String userList = "";
-			for(ClientData client : clientsInRoom)
-				userList += client.getUsername() + ", ";
-			
-			userList = userList.substring(0, userList.length() - 2);
-			
-			ClientData client = curr.findClientBySocket(socketChannel);
-			if(client.isHarmony())
-				userList = "Harmony//#F7931E//100//" + userList + "//" + findRoomNum(curr);
-			
-			try
-			{
-				ByteBuffer sendBuffer = ByteBuffer.wrap(userList.getBytes(StandardCharsets.UTF_8));
-				socketChannel.write(sendBuffer);
-				sendBuffer.rewind();
-				System.out.println("Msg sent");
-			}
-			
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
+			listUsers(msg, socketChannel);
 			return;
 		}
 		
-		else if(msg.startsWith("\\r")) // List the room names
+		else if(msg.startsWith("\\r")) // List the room names: \\r
 		{
-			Room curr = findWhichRoom(socketChannel);
-			
-			if(curr.equals(notInRoom))
-				return;
-			
-			msg = "One, Two, Three";
-			ClientData client = curr.findClientBySocket(socketChannel);
-			if(client.isHarmony())
-				msg = "Harmony//#F7931E//100//" + msg + "//" + findRoomNum(curr);
-			
-			try
-			{
-				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
-				socketChannel.write(sendBuffer);
-				sendBuffer.rewind();
-				System.out.println("Msg sent");
-			}
-			
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
+			listRooms(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("\\e")) // Change Room. \\e RoomNum
+		else if(msg.startsWith("\\e")) // Change Room: \\e RoomNum
 		{
-			Room curr = findWhichRoom(socketChannel);
-			
-			ClientData client = curr.findClientBySocket(socketChannel);
-			
-			if(curr.equals(roomOne))
-				roomOne.removeClient(socketChannel);
-			
-			else if(curr.equals(roomTwo))
-				roomTwo.removeClient(socketChannel);
-			
-			else if(curr.equals(roomThree))
-				roomThree.removeClient(socketChannel);
-			
-			else if(curr.equals(notInRoom))
-				notInRoom.removeClient(socketChannel);
-			
-			String[] parts = msg.split(" ");
-			String requestedRoom = parts[1].toLowerCase();
-			
-			if(requestedRoom.contains("\r\n"))
-				requestedRoom = requestedRoom.replace("\r\n", "");
-			
-			int roomNum = -1;
-			switch(requestedRoom)
-			{
-				case "-1":
-					notInRoom.addClient(client);
-					break;
-				
-				case "one":
-					
-				case "1":
-					roomOne.addClient(client);
-					msg = "Server: Joined Room One.";
-					roomNum = 1;
-					break;
-					
-				case "two":
-					
-				case "2":
-					roomTwo.addClient(client);
-					msg = "Server: Joined Room Two.";
-					roomNum = 2;
-					break;
-					
-				case "three":
-					
-				case "3":
-					roomThree.addClient(client);
-					msg = "Server: Joined Room Three.";
-					roomNum = 3;
-					break;
-					
-				default:
-					msg = "Server: Incorrect room name.";
-			}
-			
-			try
-			{
-				if(!client.isHarmony())
-				{
-					ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
-					socketChannel.write(sendBuffer);
-					sendBuffer.rewind();
-					System.out.println("Msg sent");
-				}
-			}
-			
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
-			msg = "CLOSED//" + client.getUsername();
-			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
-			msg = "USER//" + client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + roomNum;
-			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
-			
+			changeRoom(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("\\w")) // What room is the client in
+		else if(msg.startsWith("\\w")) // What room is the client in: \\w
 		{
-			Room curr = findWhichRoom(socketChannel);
-			
-			if(curr.equals(roomOne))
-				msg = "Server: You're in Room One.";
-			
-			else if(curr.equals(roomTwo))
-				msg = "Server: You're in Room Two.";
-			
-			else if(curr.equals(roomThree))
-				msg = "Server: You're in Room Three.";
-			
-			else if(curr.equals(notInRoom))
-				msg = "Server: You're not in a Room.";
-			
-			ClientData client = curr.findClientBySocket(socketChannel);
-			if(client.isHarmony())
-				msg = "Harmony//#F7931E//100//" + msg.substring(8) + "//" + findRoomNum(curr);
-			
-			try
-			{
-				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
-				socketChannel.write(sendBuffer);
-				sendBuffer.rewind();
-				System.out.println("Msg sent");
-			}
-			
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
+			whatRoom(msg, socketChannel);			
 			return;
 		}
 		
 		else if(msg.startsWith("\\dm")) // DM User: \\dm userToSendTo msg
 		{
-			String[] parts = msg.split(" ");
-			
-			if(parts.length < 2)
-				return;
-			
-			msg = "";
-			for(int i = 2; i < parts.length; i++)
-				msg += parts[i] + " ";
-			
-			msg = msg.substring(0, msg.length() - 1);
-			
-			Room curr = findWhichRoom(socketChannel);
-			ClientData clientToSendTo = curr.findClientByUsername(parts[1]);
-			ClientData client = curr.findClientBySocket(socketChannel);
-			
-			if(clientToSendTo == null)
-				return;
-			
-			else if(clientToSendTo.isHarmony())
-				msg = client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + msg + "//" + findRoomNum(curr); // userToSendTo color iconID msg roomNum
-			
-			SocketChannel socketToSendTo = clientToSendTo.getSocketChannel();
-			
-			try
-			{
-				ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
-				socketToSendTo.write(bufferSend);
-				bufferSend.rewind();
-				System.out.println("Msg sent");
-			}
-			
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
+			dm(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("\\u")) // Link Username. Non-Harmony: \\u username, Harmony: \\u username #color iconID (NOTE: it should only be one slash, but java accepts unicode)
-		{
-			ClientData clientToAdd = null;
-			Socket socket = socketChannel.socket();
-			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
-			
-			if(msg.contains("\r\n"))
-				msg = msg.replace("\r\n", "");
-			
-			String[] parts = msg.split(" ");
-			
-			if(parts.length == 2) // Non-Harmony
-				clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], getRandomColor(), false);
-			
-			else if(parts.length == 4) // Harmony
-			{
-				clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], parts[2].replace("\r\n", ""), true);
-				clientToAdd.setIconID(parts[3]);
-			}
-			
-			notInRoom.addClient(clientToAdd);
-			
-			try
-			{
-				msg = "One, Two, Three";
-				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
-				socketChannel.write(sendBuffer);
-				sendBuffer.rewind();
-				System.out.println("Msg sent");
-			}
-			
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
+		else if(msg.startsWith("\\u")) // Link Username: Non-Harmony: \\u username
+		{							  //					 Harmony: \\u username #color iconID
+			registerUser(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("\\checkUse")) // Only used by Harmony Clients
+		else if(msg.startsWith("\\checkUser")) // Check if username is in use: \\checkUser username
 		{
-			String[] parts = msg.split(" ");
-			String username = parts[1];
-			
-			if(roomOne.findClientByUsername(username) == null && roomTwo.findClientByUsername(username) == null &&
-			   roomThree.findClientByUsername(username) == null && notInRoom.findClientByUsername(username) == null)
-			{
-				msg = "USER_CHECK//No";
-			}
-			
-			else
-				msg = "USER_CHECK//Yes";
-			
-			try
-			{
-				ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
-				socketChannel.write(bufferSend);
-				bufferSend.rewind();
-				System.out.println("Msg sent");
-			}
-			
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
-			
+			checkUser(msg, socketChannel);			
 			return;
 		}
 		
-		else if(msg.startsWith("USER_UPDATE//")) // USER_UPDATE//color//iconID
+		else if(msg.startsWith("\\userUpdate")) // Update User Info: \\userUpdate color iconID
 		{
-			Room curr = findWhichRoom(socketChannel);
-			ClientData client = curr.findClientBySocket(socketChannel);
-			
-			if(!client.isHarmony())
-				return;
-			
-			if(msg.contains("\r\n"))
-				msg = msg.replace("\r\n", "");
-			
-			String[] parsedMsg = msg.split("//");
-			
-			int roomNum = findRoomNum(curr);
-			
-			switch(roomNum)
-			{
-				case -1:
-					notInRoom.updateColor(socketChannel, parsedMsg[1]);
-					notInRoom.updateIconID(socketChannel, parsedMsg[2]);
-					break;
-					
-				case 1:
-					roomOne.updateColor(socketChannel, parsedMsg[1]);
-					roomOne.updateIconID(socketChannel, parsedMsg[2]);
-					break;
-					
-				case 2:
-					roomTwo.updateColor(socketChannel, parsedMsg[1]);
-					roomTwo.updateIconID(socketChannel, parsedMsg[2]);
-					break;
-					
-				case 3:
-					roomThree.updateColor(socketChannel, parsedMsg[1]);
-					roomThree.updateIconID(socketChannel, parsedMsg[2]);
-					break;
-			}
-			
+			updateUser(msg, socketChannel);			
 			return;
 		}
 		
@@ -669,6 +311,365 @@ public class SocketServer
 			curr = roomThree;
 		
 		sendMsg(msg.getBytes(StandardCharsets.UTF_8), curr, curr.findClientBySocket(socketChannel));
+	}
+	
+	private void userDisconnect(String msg, SocketChannel socketChannel, SelectionKey key)
+	{
+		ClientData client = null;
+		
+		if(roomOne.containsClientBySocketChannel(socketChannel))
+		{
+			client = roomOne.findClientBySocket(socketChannel);
+			roomOne.removeClient(socketChannel);
+		}
+		
+		else if(roomTwo.containsClientBySocketChannel(socketChannel))
+		{
+			client = roomTwo.findClientBySocket(socketChannel);
+			roomTwo.removeClient(socketChannel);
+		}
+		
+		else if(roomThree.containsClientBySocketChannel(socketChannel))
+		{
+			client = roomThree.findClientBySocket(socketChannel);
+			roomThree.removeClient(socketChannel);
+		}
+		
+		else if(notInRoom.containsClientBySocketChannel(socketChannel))
+			notInRoom.removeClient(socketChannel);
+		
+		if(client == null)
+		{
+			key.cancel();
+			return;
+		}
+		
+		msg = "CLOSED//" + client.getUsername();
+		sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
+		
+		try
+		{
+			if(socketChannel.isConnected())
+				socketChannel.close();
+		}
+		
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		key.cancel();
+	}
+	
+	private void listUsers(String msg, SocketChannel socketChannel)
+	{
+		Room curr = findWhichRoom(socketChannel);
+		
+		if(curr.equals(notInRoom))
+			return;
+		
+		ArrayList<ClientData> clientsInRoom = curr.getClientList();
+		
+		String userList = "";
+		for(ClientData client : clientsInRoom)
+			userList += client.getUsername() + ", ";
+		
+		userList = userList.substring(0, userList.length() - 2);
+		
+		ClientData client = curr.findClientBySocket(socketChannel);
+		if(client.isHarmony())
+			userList = "Harmony//#F7931E//100//" + userList + "//" + findRoomNum(curr);
+		
+		try
+		{
+			ByteBuffer sendBuffer = ByteBuffer.wrap(userList.getBytes(StandardCharsets.UTF_8));
+			socketChannel.write(sendBuffer);
+			sendBuffer.rewind();
+			System.out.println("Msg sent");
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void listRooms(String msg, SocketChannel socketChannel)
+	{
+		Room curr = findWhichRoom(socketChannel);
+		
+		if(curr.equals(notInRoom))
+			return;
+		
+		msg = "One, Two, Three";
+		ClientData client = curr.findClientBySocket(socketChannel);
+		if(client.isHarmony())
+			msg = "Harmony//#F7931E//100//" + msg + "//" + findRoomNum(curr);
+		
+		try
+		{
+			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+			socketChannel.write(sendBuffer);
+			sendBuffer.rewind();
+			System.out.println("Msg sent");
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void changeRoom(String msg, SocketChannel socketChannel)
+	{
+		Room curr = findWhichRoom(socketChannel);
+		
+		ClientData client = curr.findClientBySocket(socketChannel);
+		
+		if(curr.equals(roomOne))
+			roomOne.removeClient(socketChannel);
+		
+		else if(curr.equals(roomTwo))
+			roomTwo.removeClient(socketChannel);
+		
+		else if(curr.equals(roomThree))
+			roomThree.removeClient(socketChannel);
+		
+		else if(curr.equals(notInRoom))
+			notInRoom.removeClient(socketChannel);
+		
+		String[] parts = msg.split(" ");
+		String requestedRoom = parts[1].toLowerCase();
+		
+		int roomNum = -1;
+		switch(requestedRoom)
+		{
+			case "-1":
+				notInRoom.addClient(client);
+				break;
+			
+			case "one":
+				
+			case "1":
+				roomOne.addClient(client);
+				msg = "Server: Joined Room One.";
+				roomNum = 1;
+				break;
+				
+			case "two":
+				
+			case "2":
+				roomTwo.addClient(client);
+				msg = "Server: Joined Room Two.";
+				roomNum = 2;
+				break;
+				
+			case "three":
+				
+			case "3":
+				roomThree.addClient(client);
+				msg = "Server: Joined Room Three.";
+				roomNum = 3;
+				break;
+				
+			default:
+				msg = "Server: Incorrect room name.";
+		}
+		
+		try
+		{
+			if(!client.isHarmony())
+			{
+				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+				socketChannel.write(sendBuffer);
+				sendBuffer.rewind();
+				System.out.println("Msg sent");
+			}
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		msg = "CLOSED//" + client.getUsername();
+		sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
+		msg = "USER//" + client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + roomNum;
+		sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
+	}
+	
+	private void whatRoom(String msg, SocketChannel socketChannel)
+	{
+		Room curr = findWhichRoom(socketChannel);
+		
+		if(curr.equals(roomOne))
+			msg = "Server: You're in Room One.";
+		
+		else if(curr.equals(roomTwo))
+			msg = "Server: You're in Room Two.";
+		
+		else if(curr.equals(roomThree))
+			msg = "Server: You're in Room Three.";
+		
+		else if(curr.equals(notInRoom))
+			msg = "Server: You're not in a Room.";
+		
+		ClientData client = curr.findClientBySocket(socketChannel);
+		if(client.isHarmony())
+			msg = "Harmony//#F7931E//100//" + msg.substring(8) + "//" + findRoomNum(curr);
+		
+		try
+		{
+			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+			socketChannel.write(sendBuffer);
+			sendBuffer.rewind();
+			System.out.println("Msg sent");
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void dm(String msg, SocketChannel socketChannel)
+	{
+		String[] parts = msg.split(" ");
+		
+		if(parts.length < 2)
+			return;
+		
+		msg = "";
+		for(int i = 2; i < parts.length; i++)
+			msg += parts[i] + " ";
+		
+		msg = msg.substring(0, msg.length() - 1);
+		
+		Room curr = findWhichRoom(socketChannel);
+		ClientData clientToSendTo = curr.findClientByUsername(parts[1]);
+		ClientData client = curr.findClientBySocket(socketChannel);
+		
+		if(clientToSendTo == null)
+			return;
+		
+		else if(clientToSendTo.isHarmony())
+			msg = client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + msg + "//" + findRoomNum(curr); // userToSendTo color iconID msg roomNum
+		
+		SocketChannel socketToSendTo = clientToSendTo.getSocketChannel();
+		
+		try
+		{
+			ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+			socketToSendTo.write(bufferSend);
+			bufferSend.rewind();
+			System.out.println("Msg sent");
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void registerUser(String msg, SocketChannel socketChannel)
+	{
+		ClientData clientToAdd = null;
+		Socket socket = socketChannel.socket();
+		SocketAddress remoteAddress = socket.getRemoteSocketAddress();
+		
+		if(msg.contains("\r\n"))
+			msg = msg.replace("\r\n", "");
+		
+		String[] parts = msg.split(" ");
+		
+		if(parts.length == 2) // Non-Harmony
+			clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], getRandomColor(), false);
+		
+		else if(parts.length == 4) // Harmony
+		{
+			clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], parts[2].replace("\r\n", ""), true);
+			clientToAdd.setIconID(parts[3]);
+		}
+		
+		notInRoom.addClient(clientToAdd);
+		
+		try
+		{
+			msg = "One, Two, Three";
+			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+			socketChannel.write(sendBuffer);
+			sendBuffer.rewind();
+			System.out.println("Msg sent");
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void checkUser(String msg, SocketChannel socketChannel)
+	{
+		String[] parts = msg.split(" ");
+		String username = parts[1];
+		
+		if(roomOne.findClientByUsername(username) == null && roomTwo.findClientByUsername(username) == null &&
+		   roomThree.findClientByUsername(username) == null && notInRoom.findClientByUsername(username) == null)
+		{
+			msg = "USER_CHECK//No";
+		}
+		
+		else
+			msg = "USER_CHECK//Yes";
+		
+		try
+		{
+			ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+			socketChannel.write(bufferSend);
+			bufferSend.rewind();
+			System.out.println("Msg sent");
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void updateUser(String msg, SocketChannel socketChannel)
+	{
+		Room curr = findWhichRoom(socketChannel);
+		ClientData client = curr.findClientBySocket(socketChannel);
+		
+		if(!client.isHarmony())
+			return;
+		
+		String[] parsedMsg = msg.split(" ");
+		
+		int roomNum = findRoomNum(curr);
+		
+		switch(roomNum)
+		{
+			case -1:
+				notInRoom.updateColor(socketChannel, parsedMsg[1]);
+				notInRoom.updateIconID(socketChannel, parsedMsg[2]);
+				break;
+				
+			case 1:
+				roomOne.updateColor(socketChannel, parsedMsg[1]);
+				roomOne.updateIconID(socketChannel, parsedMsg[2]);
+				break;
+				
+			case 2:
+				roomTwo.updateColor(socketChannel, parsedMsg[1]);
+				roomTwo.updateIconID(socketChannel, parsedMsg[2]);
+				break;
+				
+			case 3:
+				roomThree.updateColor(socketChannel, parsedMsg[1]);
+				roomThree.updateIconID(socketChannel, parsedMsg[2]);
+				break;
+		}
 	}
 
 	private void sendMsg(byte[] msg, Room curr, ClientData sender)

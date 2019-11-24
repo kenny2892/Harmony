@@ -31,10 +31,14 @@ public class Main extends Application
 	private static Color userColor;
 	private static int iconID;
 	private static Stage stage;
-	private static ArrayList<String> usersInRoom; // Notes from Beta Tester: Multiple people can't login at once, Can't do links (pases //), closing inifinite loop (closing without loging in), IDEA: how many msgs are in a room, Change swaping of chats
+	private static ArrayList<String> usersInRoom;
 	private static ArrayList<Node> roomOneChat; // Arrows turn white, possible add loading room screen
 	private static ArrayList<Node> roomTwoChat;
 	private static ArrayList<Node> roomThreeChat;
+	private static int totalMsgCount = 0;
+	private static int roomOneMsgCount = 0;
+	private static int roomTwoMsgCount = 0;
+	private static int roomThreeMsgCount = 0;
 	private static StartMode startMode = StartMode.TITLE;
 	private static TitleMode titleMode = TitleMode.SERVER;
 	private static File downloadDirectory;
@@ -62,7 +66,6 @@ public class Main extends Application
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("/client_application/Main.fxml"));
 			Parent root = loader.load();
 			Scene scene = new Scene(root);
-//			scene.getStylesheets().add(getClass().getResource("/client_application/application.css").toExternalForm());
 			primaryStage.setScene(scene);
 			primaryStage.setResizable(false);
 			primaryStage.sizeToScene();
@@ -70,8 +73,6 @@ public class Main extends Application
 			primaryStage.getIcons().add(new Image(getClass().getResource("/resources/System Icon.png").toExternalForm()));
 			primaryStage.setTitle("Harmony");
 			primaryStage.show();
-			
-//			controller = loader.getController();
 			
 			double height = scene.getHeight();
 			double width = scene.getWidth();
@@ -441,5 +442,57 @@ public class Main extends Application
 		    }
 		
 		    return hex2;
+	}
+	
+	public static void msgCountIncrease(int roomNum)
+	{
+		if(roomNum < 1 && roomNum > 3)
+			return;
+		
+		if(totalMsgCount == 0)
+		{
+			totalMsgCount++;
+			return;
+		}
+		
+		switch(roomNum)
+		{
+			case 1:
+				roomOneMsgCount++;
+				totalMsgCount++;
+				break;
+				
+			case 2:
+				roomTwoMsgCount++;
+				totalMsgCount++;
+				break;
+				
+			case 3:
+				roomThreeMsgCount++;
+				totalMsgCount++;
+				break;
+		}
+	}
+	
+	public static int getRoomMsgCount(int roomNum)
+	{
+		switch(roomNum)
+		{
+			case 1:
+				return roomOneMsgCount;
+				
+			case 2:
+				return roomTwoMsgCount;
+				
+			case 3:
+				return roomThreeMsgCount;
+		}
+		
+		return 0;
+	}
+	
+	public static int getTotalMsgCount()
+	{
+		return totalMsgCount;
 	}
 }
