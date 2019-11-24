@@ -128,6 +128,42 @@ public class Room
 	{
 		return clients;
 	}
+	
+	public void updateColor(SocketChannel socketChannel, String color)
+	{
+		if(socketChannel == null)
+			throw new IllegalArgumentException("Socket Channel is null.");
+		
+		else if(color == null)
+			throw new IllegalArgumentException("Color is null.");
+		
+		for(ClientData client : clients)
+		{
+			if(client.getSocketChannel().equals(socketChannel))
+			{
+				client.setColor(color);
+				break;
+			}
+		}
+	}
+	
+	public void updateIconID(SocketChannel socketChannel, String iconID)
+	{
+		if(socketChannel == null)
+			throw new IllegalArgumentException("Socket Channel is null.");
+		
+		else if(iconID == null)
+			throw new IllegalArgumentException("iconID is null.");
+		
+		for(ClientData client : clients)
+		{
+			if(client.getSocketChannel().equals(socketChannel))
+			{
+				client.setIconID(iconID);
+				break;
+			}
+		}
+	}
 
 	@Override
 	public boolean equals(Object obj)

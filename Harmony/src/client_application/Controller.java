@@ -22,14 +22,20 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.CacheHint;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.Blend;
+import javafx.scene.effect.BlendMode;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.ColorInput;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -37,7 +43,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -66,8 +71,10 @@ public class Controller
 	@FXML private Group signedInScreen;
 	@FXML private Pane titlePanel;
 	@FXML private Pane settingsPanel;
-	@FXML private Rectangle titlePanelBtn;
-	@FXML private Rectangle settingsPanelBtn;
+	@FXML private Rectangle titleClicked;
+	@FXML private Rectangle titleHover;
+	@FXML private Rectangle settingsClicked;
+	@FXML private Rectangle settingsHover;
 	@FXML private TextField usernameField;
 	@FXML private PasswordField passwordField;
 	@FXML private Text incorrectPassword;
@@ -83,20 +90,31 @@ public class Controller
 	@FXML private Line closeIcon2;
 	@FXML private Line minimizeIcon;
 	@FXML private Rectangle topBar;
+	
+	@FXML private Text iconIndexText;
+	@FXML private ColorPicker userColorPicker;
+	@FXML private Pane userIconPane;
+	@FXML private Rectangle settingsHitBox;
+	@FXML private Rectangle titleHitBox;
 
 	private String serverAddress;
 	private int serverPort;
 	private int roomNum;
-
+	private int msgCount = 0;
+	private String[] roomNames;
+	
 	public void initialize()
 	{
 		enterMsgSetUp();
 		startup();
+		roomNames = new String[3];
 		mainTxtScrollPane.vvalueProperty().bind(mainTextFlow.heightProperty());
 	}
 
 	public void clickStartRoom()
 	{
+		selectedRoomLine.setLayoutX(104);
+		selectedRoomLine.setLayoutY(38);		
 		showStartDisplay();
 
 		if (roomNum != 0)
@@ -146,6 +164,7 @@ public class Controller
 		Main.setTitleMode(TitleMode.LOGIN);
 
 		checkForMsgs();
+		userColorPicker.setValue(Color.web(Main.getHexColor()));
 	}
 
 	public void signIn()
@@ -166,10 +185,27 @@ public class Controller
 			return false;
 
 		roomNum = num;
+		
+		String roomName = "";
+		switch(num)
+		{
+			case 1:
+				roomName = roomNames[0];
+				break;
+
+			case 2:
+				roomName = roomNames[1];
+				break;
+
+			case 3:
+				roomName = roomNames[2];
+				break;
+		}
+		
 		if (roomNum > 0)
 		{
 			Main.clearRoom();
-			Main.sendMsg("\\e " + num);
+			Main.sendMsg("\\e " + roomName);
 
 			try
 			{
@@ -200,36 +236,18 @@ public class Controller
 		startDisplay.setVisible(true);
 		chatDisplay.setVisible(false);
 		
-		if(Main.getStartMode() == StartMode.TITLE)
-		{
-			titlePanel.setVisible(true);
-			settingsPanel.setVisible(false);
-			
-			serverScreen.setVisible(false);
-			loginScreen.setVisible(false);
-			signedInScreen.setVisible(false);
-			
-			switch(Main.getTitleMode())
-			{
-				case SERVER:
-					serverScreen.setVisible(true);
-					break;
-
-				case LOGIN:
-					serverScreen.setVisible(true);
-					break;
-
-				case SIGNED_IN:
-					signedInScreen.setVisible(true);
-					break;
-			}
-		}
+		titleClicked.setVisible(false);
+		titleHover.setVisible(false);
+		settingsClicked.setVisible(false);
+		settingsHover.setVisible(false);
+		titlePanel.setVisible(false);
+		settingsPanel.setVisible(false);
+		
+		if(Main.getStartMode() == StartMode.TITLE || Main.getUsername() == null)
+			titleMenu();
 		
 		else
-		{
-			titlePanel.setVisible(false);
-			settingsPanel.setVisible(true);
-		}
+			settingsMenu();
 	}
 
 	public void clickRoomOne()
@@ -311,7 +329,7 @@ public class Controller
 				}
 
 				else if (msg.length() > Main.CHAR_LIMIT)
-					enterMsgTextArea.setText(msg.substring(0, 120));
+					enterMsgTextArea.setText(msg.substring(0, Main.CHAR_LIMIT));
 			}
 		});
 	}
@@ -327,17 +345,28 @@ public class Controller
 				while(!Main.getSocket().isClosed())
 				{
 					byte[] buffer = new byte[2048];
-					int count = input.read(buffer);
+					int count = 0;
+					
+					try
+					{
+						count = input.read(buffer);
+					}
+					
+					catch(Exception e)
+					{
+						break;
+					}
+					
 					String msg = new String(buffer, StandardCharsets.UTF_8).substring(0, count);
 					
 					if(msg.startsWith("\\f"))
 					{
-						String[] parts = msg.split(" ");  // \f reciever color file_name length
+						String[] parts = msg.split(" ");  // \f reciever color iconID file_name length
 						
 						try
 						{
 							String fileName = "";
-							for(int i = 3; i < parts.length - 1; i++)
+							for(int i = 4; i < parts.length - 1; i++)
 								fileName += parts[i] + " ";
 							
 							fileName = fileName.substring(0, fileName.length() - 1);
@@ -374,7 +403,7 @@ public class Controller
 							
 							out.close();
 							
-							String sendMsg = parts[1] + "//" + parts[2] + "//You Received a New File: " + fileName + "//" + roomNum;
+							String sendMsg = parts[1] + "//" + parts[2] + "//" + parts[3] + "//You Received a New File: " + fileName + "//" + roomNum;
 							
 							Platform.runLater(() ->
 							{
@@ -412,13 +441,29 @@ public class Controller
 	
 	private void addUser(String msg)
 	{
-		String[] parsedMsg = msg.split("//"); // USER//username//#color
+		String[] parsedMsg = msg.split("//"); // USER//username//#color//IconID//RoomNum
 		String user = parsedMsg[1];
+		
+		if (Main.isInRoom(user))
+			return;
+		
+		try
+		{
+			int roomNum = Integer.parseInt(parsedMsg[4]);
+			
+			if(this.roomNum != roomNum)
+				return;
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 
 		for(int i = user.length(); i < 25; i++)
 			user += " ";
 
-		Node icon = getUserIcon(parsedMsg[1], parsedMsg[2]);
+		Node icon = getUserIcon(parsedMsg[3], parsedMsg[2], 25);
 		TextFlow iconFlow = new TextFlow(new Text("\n   "), icon);
 
 		Text username = new Text(user);
@@ -446,7 +491,10 @@ public class Controller
 
 	private void displayMsg(String msg)
 	{
-		String[] parsedMsg = msg.split("//"); // username_of_sender//#user_color//msg//room_num
+		String[] parsedMsg = null;
+		
+		if(msg.contains("//"))
+			parsedMsg = msg.split("//"); // username_of_sender//#user_color//iconID//msg//room_num
 		
 		if (msg.startsWith("USER//"))
 		{
@@ -474,13 +522,32 @@ public class Controller
 				loginScreen.setVisible(false);
 				Main.setUsername(username);
 				Main.setTitleMode(TitleMode.SIGNED_IN);
-				Main.sendMsg("\\u " + username + " " + Main.getHexColor());
+				Main.sendMsg("\\u " + username + " " + Main.getHexColor() + " " + Main.getIconID());
 			}
 			
 			return;
 		}
 		
-		Node icon = getUserIcon(parsedMsg[0], parsedMsg[1]);
+		msgCount++;
+		
+		if(msgCount == 1)
+		{
+			if(msg.contains(", "))
+				parsedMsg = msg.split(", ");
+			
+			else
+				parsedMsg = msg.split(",");
+			
+			if(parsedMsg.length != 3)
+				return;
+			
+			roomNames[0] = parsedMsg[0];
+			roomNames[1] = parsedMsg[1];
+			roomNames[2] = parsedMsg[2];
+			return;
+		}
+		
+		Node icon = getUserIcon(parsedMsg[2], parsedMsg[1], 25);
 
 		Date curr = new Date();
 		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
@@ -492,15 +559,15 @@ public class Controller
 		username.setFill(Color.web(parsedMsg[1]));
 		username.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
-		TextArea txtMsg = new TextArea(parsedMsg[2] + "\n");
+		TextArea txtMsg = new TextArea(parsedMsg[3] + "\n");
 		txtMsg.setStyle("-fx-background-color: transparent;-fx-text-inner-color: #d7d5d9;");
 		txtMsg.setFont(Font.font("Arial", 14));
 		txtMsg.setMaxWidth(653);
 
-		if (parsedMsg[2].length() <= 50)
+		if (parsedMsg[3].length() <= 50)
 			txtMsg.setMaxHeight(28.3);
 
-		else if (parsedMsg[2].length() <= 100)
+		else if (parsedMsg[3].length() <= 100)
 			txtMsg.setMaxHeight(60);
 
 		else
@@ -524,7 +591,7 @@ public class Controller
 		int intendedRoom = 0;
 		try
 		{
-			intendedRoom = Integer.parseInt(parsedMsg[3]);
+			intendedRoom = Integer.parseInt(parsedMsg[4]);
 		}
 
 		catch(Exception e)
@@ -555,42 +622,91 @@ public class Controller
 		}
 	}
 
-	private Node getUserIcon(String username, String hexColor)
+	private Node getUserIcon(String iconStr, String hexColor, int radius)
 	{
 		URL path = null;
 		Node icon = null;
-
-		if (username.compareTo("Harmony") == 0)
-			path = getClass().getResource("/resources/System Icon.png");
-
-		else
+		int iconID = 100;
+		
+		try
 		{
-			path = getClass().getResource("/resources/user icons/" + username + ".jpg");
-
-			if (path == null)
-				path = getClass().getResource("/resources/user icons/" + username + ".png");
+			iconID = Integer.parseInt(iconStr);
 		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		if(iconID < 1 || iconID > Main.MAX_ICON_ID)
+			iconID = 100;
 
-		if (path != null)
+		path = getClass().getResource("/resources/user icons/" + iconID + ".jpg");
+
+		if (path == null)
+			path = getClass().getResource("/resources/user icons/" + iconID + ".png");
+		
+		if(path == null || iconID == 100)
+			icon = getDefaultIcon(Color.web(hexColor), radius);
+
+		else if (path != null)
 		{
 			icon = new ImageView(new Image(path.toExternalForm()));
-			icon.setClip(new ImageView(
-					new Image(getClass().getResource("/resources/user icons/User Clipping Mask.png").toExternalForm())));
-			((ImageView) icon).setFitHeight(50);
-			((ImageView) icon).setFitWidth(50);
+			
+			ImageView mask = new ImageView(new Image(getClass().getResource("/resources/user icons/User Clipping Mask.png").toExternalForm()));
+			mask.setFitHeight(radius * 2);
+			mask.setFitWidth(radius * 2);
+			mask.setPreserveRatio(true);
+			
+			((ImageView) icon).setFitHeight(radius * 2);
+			((ImageView) icon).setFitWidth(radius * 2);
 			((ImageView) icon).setPreserveRatio(true);
-		}
-
-		else
-		{
-			Circle iconCircle = new Circle();
-			iconCircle.setFill(Color.web(hexColor));
-			iconCircle.setRadius(25);
-
-			icon = iconCircle;
+			icon.setClip(mask);
+//			Circle mask = new Circle();
+//			mask.setRadius(radius);
+//			icon.setClip(mask);
 		}
 
 		return icon;
+	}
+	
+	private Group getDefaultIcon(Color color, int radius)
+	{
+		ImageView userIcon = new ImageView(new Image(getClass().getResource("/resources/user icons/Default_White.png").toExternalForm()));
+		
+		ColorAdjust adjust = new ColorAdjust();
+
+		adjust.setBrightness(color.getBrightness());
+		adjust.setHue(color.getHue());
+		adjust.setSaturation(color.getSaturation());
+		adjust.setContrast(1);
+
+		Blend colorize = new Blend(BlendMode.MULTIPLY, adjust,
+				new ColorInput(0, 0, userIcon.getImage().getWidth(), userIcon.getImage().getHeight(), color));
+
+		userIcon.setEffect(colorize);
+
+		userIcon.setCache(true);
+		userIcon.setCacheHint(CacheHint.SPEED);
+
+		ImageView mask = new ImageView(new Image(getClass().getResource("/resources/user icons/Default_Clipping_Mask.png").toExternalForm()));
+		mask.setFitHeight(radius * 2);
+		mask.setFitWidth(radius * 2);
+		mask.setPreserveRatio(true);
+		
+		ImageView bg = new ImageView(new Image(getClass().getResource("/resources/user icons/User Clipping Mask.png").toExternalForm()));
+		bg.setFitHeight(radius * 2 - 5);
+		bg.setFitWidth(radius * 2 - 5);
+		bg.setLayoutX(2);
+		bg.setLayoutY(2);
+		bg.setPreserveRatio(true);
+		
+		userIcon.setClip(mask);
+		userIcon.setFitHeight(radius * 2);
+		userIcon.setFitWidth(radius * 2);
+		userIcon.setPreserveRatio(true);
+		
+		return new Group(bg, userIcon);
 	}
 
 	@SuppressWarnings("resource")
@@ -660,6 +776,105 @@ public class Controller
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public void titleMenu()
+	{
+		Main.setStartMode(StartMode.TITLE);
+		titleClicked.setVisible(true);
+		titlePanel.setVisible(true);
+		
+		serverScreen.setVisible(false);
+		loginScreen.setVisible(false);
+		signedInScreen.setVisible(false);
+		
+		switch(Main.getTitleMode())
+		{
+			case SERVER:
+				serverScreen.setVisible(true);
+				break;
+
+			case LOGIN:
+				serverScreen.setVisible(true);
+				break;
+
+			case SIGNED_IN:
+				signedInScreen.setVisible(true);
+				break;
+		}
+	}
+	
+	public void settingsMenu()
+	{
+		if (Main.getUsername() == null)
+			return;
+
+		Main.setStartMode(StartMode.SETTINGS);
+		settingsClicked.setVisible(true);
+		settingsPanel.setVisible(true);
+		
+		filePathTxt.setText(Main.getDownloadDirPath());
+		updateIconPreview();
+	}
+	
+	public void iconRightArrow()
+	{
+		if(Main.getIconID() + 1 <= Main.MAX_ICON_ID + 1)
+		{
+			Main.setIconID(Main.getIconID() + 1);
+			updateIconPreview();
+		}
+	}
+	
+	public void iconLeftArrow()
+	{
+		if(Main.getIconID() - 1 >= 1)
+		{
+			Main.setIconID(Main.getIconID() - 1);
+			updateIconPreview();
+		}
+	}
+	
+	public void updateIconPreview()
+	{
+		iconIndexText.setText(Main.getIconID() + "");
+		Main.setUserColor(userColorPicker.getValue());
+		userIconPane.getChildren().clear();
+		userIconPane.getChildren().add(getUserIcon(Main.getIconID() + "", Main.getHexColor(), 51));
+		
+		Main.sendMsg("USER_UPDATE//" + Main.getHexColor() + "//" + Main.getIconID());
+	}
+	
+	public void titleEnter()
+	{
+		if(titleClicked.isVisible())
+			return;
+		
+		titleHover.setVisible(true);
+	}
+	
+	public void titleExit()
+	{
+		if(titleClicked.isVisible())
+			return;
+		
+		titleHover.setVisible(false);
+	}
+	
+	public void settingsEnter()
+	{
+		if(settingsClicked.isVisible())
+			return;
+		
+		settingsHover.setVisible(true);
+	}
+	
+	public void settingsExit()
+	{
+		if(settingsClicked.isVisible())
+			return;
+		
+		settingsHover.setVisible(false);
 	}
 
 	public void menuControls()

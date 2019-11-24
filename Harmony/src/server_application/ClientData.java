@@ -5,7 +5,7 @@ import java.nio.channels.SocketChannel;
 public class ClientData
 {
 	private SocketChannel socketChannel;
-	private String username, ip, color;
+	private String username, ip, color, iconID;
 	private boolean isHarmony;
 
 	public ClientData(SocketChannel socketChannel, String ip, String username, String color, boolean isHarmony)
@@ -27,6 +27,7 @@ public class ClientData
 		this.color = color;
 		this.ip = ip;
 		this.isHarmony = isHarmony;
+		this.iconID = "";
 	}
 	
 	public SocketChannel getSocketChannel()
@@ -43,6 +44,14 @@ public class ClientData
 	{
 		return color;
 	}
+	
+	public void setColor(String color)
+	{
+		if(color == null)
+			throw new IllegalArgumentException("Null color.");
+		
+		this.color = color;
+	}
 
 	public String getIp()
 	{
@@ -52,5 +61,18 @@ public class ClientData
 	public boolean isHarmony()
 	{
 		return isHarmony;
+	}
+
+	public String getIconID()
+	{
+		return iconID;
+	}
+	
+	public void setIconID(String iconID)
+	{
+		if(iconID == null)
+			throw new IllegalArgumentException("Null iconID.");
+		
+		this.iconID = iconID;
 	}
 }

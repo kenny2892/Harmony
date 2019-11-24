@@ -45,7 +45,7 @@
       <Line fx:id="minimizeIcon" endX="-88.0" endY="-3.814697265625E-6" layoutX="1339.0" layoutY="11.0" startX="-104.5" startY="-3.814697265625E-6" stroke="#b9bbbe" />
       <Rectangle fx:id="minimizeHitBox" fill="#202225" height="23.0" layoutX="1230.0" onMouseClicked="#minimizeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
       <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="1255.0" onMouseClicked="#closeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
-      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@application.css">
+      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@application.css" visible="false">
          <children>
             <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@application.css">
                <content>
@@ -117,7 +117,7 @@
             <Image url="@../resources/Test%20Room%20Icon.png" />
          </image>
       </ImageView>
-      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0" visible="false">
+      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0">
          <children>
             <Rectangle fill="#36393f" height="635.0" layoutX="589.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="239.0" />
             <ImageView fitHeight="93.0" fitWidth="493.0" layoutX="164.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true">
@@ -192,7 +192,7 @@
                   </Group>
                   <Group fx:id="signedInScreen" layoutX="123.0" layoutY="267.0">
                      <children>
-                        <Button mnemonicParsing="false" text="Change Account" visible="false">
+                        <Button mnemonicParsing="false" text="Change Account">
                            <font>
                               <Font name="Arial" size="20.0" />
                            </font>
@@ -203,9 +203,8 @@
             </Pane>
             <Pane fx:id="settingsPanel" layoutX="-132.0" layoutY="232.0" prefHeight="394.0" prefWidth="944.0">
                <children>
-                  <ColorPicker layoutX="413.0" layoutY="253.0" prefHeight="30.0" prefWidth="118.0" />
-                  <Circle fill="DODGERBLUE" layoutX="472.0" layoutY="195.0" radius="51.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
-                  <Text fill="WHITE" layoutX="373.0" layoutY="134.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Color:" textAlignment="CENTER">
+                  <ColorPicker fx:id="userColorPicker" layoutX="413.0" layoutY="131.0" onAction="#updateIconPreview" prefHeight="30.0" prefWidth="118.0" />
+                  <Text fill="WHITE" layoutX="373.0" layoutY="118.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Color:" textAlignment="CENTER">
                      <font>
                         <Font name="Arial" size="39.0" />
                      </font>
@@ -215,33 +214,56 @@
                         <Font name="Arial" size="20.0" />
                      </font>
                   </Button>
-                  <Text fx:id="filePath" fill="WHITE" layoutX="317.0" layoutY="42.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Path" underline="true">
+                  <Text fx:id="filePathTxt" fill="WHITE" layoutX="317.0" layoutY="42.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Path" underline="true">
                      <font>
                         <Font name="Arial" size="27.0" />
+                     </font>
+                  </Text>
+                  <Text fill="WHITE" layoutX="383.0" layoutY="210.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Icon:" textAlignment="CENTER">
+                     <font>
+                        <Font name="Arial" size="39.0" />
+                     </font>
+                  </Text>
+                  <Pane fx:id="userIconPane" layoutX="421.0" layoutY="218.0" prefHeight="102.0" prefWidth="102.0" />
+                  <ImageView fitHeight="50.0" fitWidth="90.0" layoutX="338.0" layoutY="323.0" onMouseClicked="#iconLeftArrow" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../resources/Left%20Arrow%20Button.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="50.0" fitWidth="90.0" layoutX="515.0" layoutY="325.0" onMouseClicked="#iconRightArrow" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../resources/Right%20Arrow%20Button.png" />
+                     </image>
+                  </ImageView>
+                  <Text fx:id="iconIndexText" fill="WHITE" layoutX="461.0" layoutY="363.0" strokeType="OUTSIDE" strokeWidth="0.0" text="0" textAlignment="CENTER">
+                     <font>
+                        <Font name="Arial" size="39.0" />
                      </font>
                   </Text>
                </children>
             </Pane>
             <Group layoutX="-338.0" layoutY="8.0">
                <children>
-                  <Rectangle fx:id="titlePanelBtn" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
+                  <Rectangle fx:id="titleClicked" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="179.0" />
+                  <Rectangle fx:id="titleHover" arcHeight="15.0" arcWidth="15.0" fill="#34373c" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="179.0" />
                   <Text fill="#829297" layoutX="42.0" layoutY="31.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Title">
                      <font>
                         <Font name="Arial" size="21.0" />
                      </font>
                   </Text>
-                  <Rectangle arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
+                  <Rectangle fx:id="titleHitBox" arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" onMouseClicked="#titleMenu" onMouseEntered="#titleEnter" onMouseExited="#titleExit" opacity="0.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
                </children>
             </Group>
             <Group layoutX="-338.0" layoutY="64.0">
                <children>
-                  <Rectangle fx:id="settingsPanelBtn" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
+                  <Rectangle fx:id="settingsClicked" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="179.0" />
+                  <Rectangle fx:id="settingsHover" arcHeight="15.0" arcWidth="15.0" fill="#34373c" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="179.0" />
                   <Text fill="#829297" layoutX="42.0" layoutY="29.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Settings">
                      <font>
                         <Font name="Arial" size="21.0" />
                      </font>
                   </Text>
-                  <Rectangle arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
+                  <Rectangle fx:id="settingsHitBox" arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" onMouseClicked="#settingsMenu" onMouseEntered="#settingsEnter" onMouseExited="#settingsExit" opacity="0.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
                </children>
             </Group>
          </children>
