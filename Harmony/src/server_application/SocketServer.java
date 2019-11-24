@@ -211,8 +211,8 @@ public class SocketServer
 					{
 						String toSendMsg = "\\f ";
 						
-						if(clientToSendTo.isHarmony()) // Harmony: \\f reciever color file_name length || Non-Harmony: \\f file_name length
-							toSendMsg += clientToSendTo.getUsername() + " " + clientToSendTo.getColor() + " ";
+						if(clientToSendTo.isHarmony()) // Harmony: \\f reciever color iconID file_name length || Non-Harmony: \\f file_name length
+							toSendMsg += clientToSendTo.getUsername() + " " + clientToSendTo.getColor() + " " + clientToSendTo.getIconID() + " ";
 						
 						for(int i = 2; i < parts.length - 1; i++)
 							toSendMsg += parts[i] + " ";
@@ -341,7 +341,7 @@ public class SocketServer
 			
 			ClientData client = curr.findClientBySocket(socketChannel);
 			if(client.isHarmony())
-				userList = "Harmony//#F7931E//" + userList + "//" + findRoomNum(curr);
+				userList = "Harmony//#F7931E//100//" + userList + "//" + findRoomNum(curr);
 			
 			try
 			{
@@ -369,7 +369,7 @@ public class SocketServer
 			msg = "One, Two, Three";
 			ClientData client = curr.findClientBySocket(socketChannel);
 			if(client.isHarmony())
-				msg = "Harmony//#F7931E//" + msg + "//" + findRoomNum(curr);
+				msg = "Harmony//#F7931E//100//" + msg + "//" + findRoomNum(curr);
 			
 			try
 			{
@@ -411,6 +411,7 @@ public class SocketServer
 			if(requestedRoom.contains("\r\n"))
 				requestedRoom = requestedRoom.replace("\r\n", "");
 			
+			int roomNum = -1;
 			switch(requestedRoom)
 			{
 				case "-1":
@@ -422,6 +423,7 @@ public class SocketServer
 				case "1":
 					roomOne.addClient(client);
 					msg = "Server: Joined Room One.";
+					roomNum = 1;
 					break;
 					
 				case "two":
@@ -429,6 +431,7 @@ public class SocketServer
 				case "2":
 					roomTwo.addClient(client);
 					msg = "Server: Joined Room Two.";
+					roomNum = 2;
 					break;
 					
 				case "three":
@@ -436,6 +439,7 @@ public class SocketServer
 				case "3":
 					roomThree.addClient(client);
 					msg = "Server: Joined Room Three.";
+					roomNum = 3;
 					break;
 					
 				default:
@@ -460,7 +464,7 @@ public class SocketServer
 			
 			msg = "CLOSED//" + client.getUsername();
 			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
-			msg = "USER//" + client.getUsername() + "//" + client.getColor();
+			msg = "USER//" + client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + roomNum;
 			sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
 			
 			return;
@@ -484,7 +488,7 @@ public class SocketServer
 			
 			ClientData client = curr.findClientBySocket(socketChannel);
 			if(client.isHarmony())
-				msg = "Harmony//#F7931E//" + msg.substring(8) + "//" + findRoomNum(curr);
+				msg = "Harmony//#F7931E//100//" + msg.substring(8) + "//" + findRoomNum(curr);
 			
 			try
 			{
@@ -523,7 +527,7 @@ public class SocketServer
 				return;
 			
 			else if(clientToSendTo.isHarmony())
-				msg = client.getUsername() + "//" + client.getColor() + "//" + msg + "//" + findRoomNum(curr);
+				msg = client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + msg + "//" + findRoomNum(curr); // userToSendTo color iconID msg roomNum
 			
 			SocketChannel socketToSendTo = clientToSendTo.getSocketChannel();
 			
@@ -543,21 +547,42 @@ public class SocketServer
 			return;
 		}
 		
-		else if(msg.startsWith("\\u")) // Link Username. Non-Harmony: \\u username, Harmony: \\u username #color (NOTE: it should only be one slash, but java accepts unicode)
+		else if(msg.startsWith("\\u")) // Link Username. Non-Harmony: \\u username, Harmony: \\u username #color iconID (NOTE: it should only be one slash, but java accepts unicode)
 		{
 			ClientData clientToAdd = null;
 			Socket socket = socketChannel.socket();
 			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
+			
+			if(msg.contains("\r\n"))
+				msg = msg.replace("\r\n", "");
 			
 			String[] parts = msg.split(" ");
 			
 			if(parts.length == 2) // Non-Harmony
 				clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], getRandomColor(), false);
 			
-			else if(parts.length == 3) // Harmony
+			else if(parts.length == 4) // Harmony
+			{
 				clientToAdd = new ClientData(socketChannel, remoteAddress.toString().substring(1), parts[1], parts[2].replace("\r\n", ""), true);
+				clientToAdd.setIconID(parts[3]);
+			}
 			
 			notInRoom.addClient(clientToAdd);
+			
+			try
+			{
+				msg = "One, Two, Three";
+				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+				socketChannel.write(sendBuffer);
+				sendBuffer.rewind();
+				System.out.println("Msg sent");
+			}
+			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			
 			return;
 		}
 		
@@ -586,6 +611,47 @@ public class SocketServer
 			catch(Exception e)
 			{
 				e.printStackTrace();
+			}
+			
+			return;
+		}
+		
+		else if(msg.startsWith("USER_UPDATE//")) // USER_UPDATE//color//iconID
+		{
+			Room curr = findWhichRoom(socketChannel);
+			ClientData client = curr.findClientBySocket(socketChannel);
+			
+			if(!client.isHarmony())
+				return;
+			
+			if(msg.contains("\r\n"))
+				msg = msg.replace("\r\n", "");
+			
+			String[] parsedMsg = msg.split("//");
+			
+			int roomNum = findRoomNum(curr);
+			
+			switch(roomNum)
+			{
+				case -1:
+					notInRoom.updateColor(socketChannel, parsedMsg[1]);
+					notInRoom.updateIconID(socketChannel, parsedMsg[2]);
+					break;
+					
+				case 1:
+					roomOne.updateColor(socketChannel, parsedMsg[1]);
+					roomOne.updateIconID(socketChannel, parsedMsg[2]);
+					break;
+					
+				case 2:
+					roomTwo.updateColor(socketChannel, parsedMsg[1]);
+					roomTwo.updateIconID(socketChannel, parsedMsg[2]);
+					break;
+					
+				case 3:
+					roomThree.updateColor(socketChannel, parsedMsg[1]);
+					roomThree.updateIconID(socketChannel, parsedMsg[2]);
+					break;
 			}
 			
 			return;
@@ -640,7 +706,7 @@ public class SocketServer
 							if(fixedMsg.contains("\r\n"))
 								fixedMsg = fixedMsg.replace("\r\n", "");
 							
-							String newMsg = client.getUsername() + "//" + client.getColor() + "//" + fixedMsg + "//" + roomNum;
+							String newMsg = client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + fixedMsg + "//" + roomNum;
 							msg = newMsg.getBytes(StandardCharsets.UTF_8);
 							send = true;
 						}
@@ -675,7 +741,17 @@ public class SocketServer
 				{
 					SocketChannel socketChannel = (SocketChannel) key.channel();
 					Room clientRoom = findWhichRoom(socketChannel);
-					ClientData client = clientRoom.findClientBySocket(socketChannel);
+					ClientData client = null;
+					
+					try
+					{
+						client = clientRoom.findClientBySocket(socketChannel);
+					}
+					
+					catch(Exception e)
+					{
+						continue;
+					}
 					
 					if(clientRoom.equals(notInRoom))
 						continue;

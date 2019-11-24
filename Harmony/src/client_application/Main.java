@@ -29,18 +29,20 @@ public class Main extends Application
 	private static Socket socket;
 	private static String username;
 	private static Color userColor;
+	private static int iconID;
 	private static Stage stage;
 	private static ArrayList<String> usersInRoom; // Notes from Beta Tester: Multiple people can't login at once, Can't do links (pases //), closing inifinite loop (closing without loging in), IDEA: how many msgs are in a room, Change swaping of chats
 	private static ArrayList<Node> roomOneChat; // Arrows turn white, possible add loading room screen
 	private static ArrayList<Node> roomTwoChat;
 	private static ArrayList<Node> roomThreeChat;
-	public static final int CHAR_LIMIT = 120;
 	private static StartMode startMode = StartMode.TITLE;
 	private static TitleMode titleMode = TitleMode.SERVER;
 	private static File downloadDirectory;
 	private static File fileToSend;
-	
 	private static double xOffset = 0, yOffset = 0;
+	
+	public static final int CHAR_LIMIT = 80;
+	public static final int MAX_ICON_ID = 5;
 	
 	public enum StartMode
 	{
@@ -90,6 +92,7 @@ public class Main extends Application
 			
 			String home = System.getProperty("user.home");
 			downloadDirectory = new File(home+"/Downloads/"); 
+			iconID = 1;
 		}
 		
 		catch(Exception e)
@@ -198,6 +201,29 @@ public class Main extends Application
 	public static Color getUserColor()
 	{
 		return userColor;
+	}
+	
+	public static boolean setUserColor(Color color)
+	{
+		if(color == null)
+			return false;
+		
+		userColor = color;
+		return true;
+	}
+	
+	public static int getIconID()
+	{
+		return iconID;
+	}
+	
+	public static boolean setIconID(int id)
+	{
+		if(iconID < 1 || iconID > MAX_ICON_ID)
+			return false;
+		
+		iconID = id;
+		return true;
 	}
 	
 	public static boolean setUsername(String name)
