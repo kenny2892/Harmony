@@ -68,8 +68,6 @@ public class SocketServer
 				Iterator<SelectionKey> keys = this.selector.selectedKeys().iterator();
 				while(keys.hasNext())
 				{
-					System.out.println("Selecting");
-					
 					SelectionKey key = (SelectionKey) keys.next();
 					keys.remove();
 					
@@ -103,7 +101,7 @@ public class SocketServer
 
 			Socket socket = socketChannel.socket();
 			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
-			System.out.println("Connected " + remoteAddress);
+			System.out.println("Connected to " + remoteAddress);
 
 			socketChannel.register(this.selector, SelectionKey.OP_READ);
 		}
@@ -116,7 +114,6 @@ public class SocketServer
 
 	private void read(SelectionKey key)
 	{
-		System.out.println("Reading");
 		SocketChannel socketChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = ByteBuffer.allocate(1024);
 		String msg = "";
@@ -222,7 +219,7 @@ public class SocketServer
 						while(fileBuffer.hasRemaining())
 							totalSent += socketChannel.write(fileBuffer);
 						
-						System.out.println("File sent.Size: " + totalSent);
+						System.out.println("File sent. Size: " + totalSent);
 					}
 					
 					return;

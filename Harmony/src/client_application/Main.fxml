@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
@@ -45,7 +46,7 @@
       <Line fx:id="minimizeIcon" endX="-88.0" endY="-3.814697265625E-6" layoutX="1339.0" layoutY="11.0" startX="-104.5" startY="-3.814697265625E-6" stroke="#b9bbbe" />
       <Rectangle fx:id="minimizeHitBox" fill="#202225" height="23.0" layoutX="1230.0" onMouseClicked="#minimizeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
       <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="1255.0" onMouseClicked="#closeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
-      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@chatDisplay.css">
+      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@chatDisplay.css" visible="false">
          <children>
             <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@chatDisplay.css">
                <content>
@@ -69,7 +70,7 @@
                   <Circle fill="WHITE" opacity="0.01" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
                </children>
             </Group>
-            <Pane fx:id="fileTransferPanel" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0" visible="false">
+            <Pane fx:id="fileTransferPane" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0" visible="false">
                <children>
                   <Rectangle fill="#2f3136" height="123.0" layoutY="26.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
                   <ComboBox fx:id="fileUserSelect" layoutX="486.0" layoutY="48.0" prefWidth="150.0" promptText="Select a User" />
@@ -122,7 +123,7 @@
             <Image url="@../resources/room%20icons/Room_3.png" />
          </image>
       </ImageView>
-      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0" visible="false">
+      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0">
          <children>
             <Rectangle fill="#36393f" height="635.0" layoutX="589.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="239.0" />
             <ImageView fitHeight="93.0" fitWidth="493.0" layoutX="164.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true">
@@ -140,9 +141,9 @@
                   <Font name="Arial" size="64.0" />
                </font>
             </Text>
-            <Pane fx:id="titlePanel" layoutX="122.0" layoutY="275.0" visible="false">
+            <Pane fx:id="titlePane" layoutX="122.0" layoutY="275.0" prefWidth="422.0">
                <children>
-                  <Group fx:id="serverScreen" layoutX="16.0" layoutY="9.09375">
+                  <Group fx:id="serverScreen" layoutX="16.0" layoutY="9.09375" visible="false">
                      <children>
                         <TextField fx:id="ipAddressField" layoutX="63.0" layoutY="52.453125" prefHeight="33.0" prefWidth="264.0" promptText="Type Here" style="-fx-text-inner-color: black; -fx-border-color: grey;" />
                         <Text fill="WHITE" layoutY="41.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Server IP Address">
@@ -195,18 +196,18 @@
                         </Button>
                      </children>
                   </Group>
-                  <Group fx:id="signedInScreen" layoutX="123.0" layoutY="267.0">
+                  <Group fx:id="signedInScreen" layoutX="78.0" layoutY="-2.0">
                      <children>
-                        <Button mnemonicParsing="false" text="Change Account">
+                        <Hyperlink fx:id="githubLink" onAction="#openGitHub" style="-fx-border-color: null; -fx-border-style: solid; -fx-border-width: 0px;" text="GitHub Link" underline="true">
                            <font>
-                              <Font name="Arial" size="20.0" />
+                              <Font name="Arial" size="46.0" />
                            </font>
-                        </Button>
+                        </Hyperlink>
                      </children>
                   </Group>
                </children>
             </Pane>
-            <Pane fx:id="settingsPanel" layoutX="-132.0" layoutY="232.0" prefHeight="394.0" prefWidth="944.0">
+            <Pane fx:id="settingsPane" layoutX="-132.0" layoutY="232.0" prefHeight="394.0" prefWidth="944.0" visible="false">
                <children>
                   <ColorPicker fx:id="userColorPicker" layoutX="413.0" layoutY="131.0" onAction="#updateIconPreview" prefHeight="30.0" prefWidth="118.0" />
                   <Text fill="WHITE" layoutX="373.0" layoutY="118.0" strokeType="OUTSIDE" strokeWidth="0.0" text="User Color:" textAlignment="CENTER">

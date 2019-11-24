@@ -27,6 +27,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
@@ -63,15 +64,15 @@ public class Controller
 	@FXML private ScrollPane mainTxtScrollPane;
 	@FXML private TextArea enterMsgTextArea;
 	@FXML private TextFlow peopleTextFlow;
-	@FXML private Pane fileTransferPanel;
+	@FXML private Pane fileTransferPane;
 	@FXML private ComboBox<String> fileUserSelect;
 	@FXML private Text msgCountTxt;
 	
 	@FXML private Group serverScreen;
 	@FXML private Group loginScreen;
 	@FXML private Group signedInScreen;
-	@FXML private Pane titlePanel;
-	@FXML private Pane settingsPanel;
+	@FXML private Pane titlePane;
+	@FXML private Pane settingsPane;
 	@FXML private Rectangle titleClicked;
 	@FXML private Rectangle titleHover;
 	@FXML private Rectangle settingsClicked;
@@ -97,6 +98,7 @@ public class Controller
 	@FXML private Pane userIconPane;
 	@FXML private Rectangle settingsHitBox;
 	@FXML private Rectangle titleHitBox;
+	@FXML private Hyperlink githubLink;
 	
 	private int roomNum;
 	private String[] roomNames;
@@ -239,7 +241,7 @@ public class Controller
 		loginScreen.setVisible(false);
 		startDisplay.setVisible(false);
 		chatDisplay.setVisible(true);
-		fileTransferPanel.setVisible(false);
+		fileTransferPane.setVisible(false);
 
 		peopleTextFlow.getChildren().clear();
 		mainTextFlow.getChildren().clear();
@@ -562,6 +564,7 @@ public class Controller
 				loginScreen.setVisible(false);
 				Main.setUsername(username);
 				Main.setTitleMode(TitleMode.SIGNED_IN);
+				signedInScreen.setVisible(true);
 				Main.sendMsg("\\u " + username + " " + Main.getHexColor() + " " + Main.getIconID());
 			}
 			
@@ -834,12 +837,12 @@ public class Controller
 		titleHover.setVisible(false);
 		settingsClicked.setVisible(false);
 		settingsHover.setVisible(false);
-		titlePanel.setVisible(false);
-		settingsPanel.setVisible(false);
+		titlePane.setVisible(false);
+		settingsPane.setVisible(false);
 		
 		Main.setStartMode(StartMode.TITLE);
 		titleClicked.setVisible(true);
-		titlePanel.setVisible(true);
+		titlePane.setVisible(true);
 		
 		serverScreen.setVisible(false);
 		loginScreen.setVisible(false);
@@ -870,12 +873,12 @@ public class Controller
 		titleHover.setVisible(false);
 		settingsClicked.setVisible(false);
 		settingsHover.setVisible(false);
-		titlePanel.setVisible(false);
-		settingsPanel.setVisible(false);
+		titlePane.setVisible(false);
+		settingsPane.setVisible(false);
 
 		Main.setStartMode(StartMode.SETTINGS);
 		settingsClicked.setVisible(true);
-		settingsPanel.setVisible(true);
+		settingsPane.setVisible(true);
 		
 		filePathTxt.setText(Main.getDownloadDirPath());
 		updateIconPreview();
@@ -1027,13 +1030,13 @@ public class Controller
 		ObservableList<String> users = FXCollections.observableArrayList(Main.getUserArray());
 		
 		fileUserSelect.setItems(users);
-		fileTransferPanel.setVisible(true);
+		fileTransferPane.setVisible(true);
 	}
 	
 	public void sendFile()
 	{
 		if(Main.sendFile(fileUserSelect.getValue()))
-			fileTransferPanel.setVisible(false);
+			fileTransferPane.setVisible(false);
 		
 		// TODO Else
 	}
@@ -1045,7 +1048,12 @@ public class Controller
 	
 	public void cancelFileSend()
 	{
-		fileTransferPanel.setVisible(false);
+		fileTransferPane.setVisible(false);
+	}
+	
+	public void openGitHub()
+	{
+		Main.openGitHub();
 	}
 
 	public void minimizeApp()
