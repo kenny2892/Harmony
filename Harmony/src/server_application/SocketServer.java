@@ -1,9 +1,12 @@
 package server_application;
 
+import java.awt.Desktop;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -14,24 +17,85 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 
-public class SocketServer
+public class SocketServer extends Application
 {
-	private Selector selector;
-	private Room roomOne, roomTwo, roomThree, notInRoom;	
-	private InetSocketAddress listeningAddress;
+	private static Selector selector;
+	private static Room roomOne, roomTwo, roomThree, notInRoom;
+	private static InetSocketAddress listeningAddress;
+	
+	private static ServerController controller;
 	
 	public static void main(String[] args)
 	{
-		SocketServer server = new SocketServer(8345);
-		server.startServer();
+		launch(args);
 	}
-
-	public SocketServer(int port)
+	
+	@Override
+	public void start(Stage primaryStage)
 	{
+		try
+		{
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(getClass().getResource("/server_application/Server.fxml"));
+			Parent root = loader.load();
+			Scene scene = new Scene(root);
+			controller = loader.getController();
+			
+			primaryStage.setScene(scene);
+			primaryStage.setResizable(false);
+			primaryStage.sizeToScene();
+			primaryStage.getIcons().add(new Image(getClass().getResource("/resources/System Icon.png").toExternalForm()));
+			primaryStage.setTitle("Harmony Server App");
+			primaryStage.show();
+
+			double height = scene.getHeight();
+			double width = scene.getWidth();
+
+			Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+			double newX = ((screenBounds.getWidth() - width) / 2);
+			double newY = ((screenBounds.getHeight() - height) / 2);
+
+			primaryStage.setX(newX);
+			primaryStage.setY(newY);
+		}
+
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public static void openGitHub()
+	{
+		try
+		{
+			Desktop.getDesktop().browse(new URL("https://github.com/kenny2892/Harmony").toURI());
+		}
 		
-		listeningAddress = new InetSocketAddress("localhost", 8345); // For Testing
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		catch(URISyntaxException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public static void startServer(int port)
+	{
+		listeningAddress = new InetSocketAddress("localhost", port); // For Testing
 //		try
 //		{
 //			listeningAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), port);
@@ -46,14 +110,23 @@ public class SocketServer
 		roomTwo = new Room();
 		roomThree = new Room();
 		notInRoom = new Room();
+		
+		new Thread(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				startWatching();
+			}
+		}).start();
 	}
 
-	public void startServer()
+	public static void startWatching()
 	{
 		try
 		{
-			System.out.println("Starting Server at: " + listeningAddress.getHostString() + " Port# " + listeningAddress.getPort());
-			this.selector = Selector.open();
+			controller.writeToConsole("Starting Server at: " + listeningAddress.getHostString() + " Port# " + listeningAddress.getPort());
+			selector = Selector.open();
 			
 			ServerSocketChannel serverChannel = ServerSocketChannel.open();
 			serverChannel.configureBlocking(false);
@@ -63,9 +136,9 @@ public class SocketServer
 
 			while(true)
 			{
-				this.selector.select(); // Wait here until something happens
+				selector.select(); // Wait here until something happens
 
-				Iterator<SelectionKey> keys = this.selector.selectedKeys().iterator();
+				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 				while(keys.hasNext())
 				{
 					SelectionKey key = (SelectionKey) keys.next();
@@ -74,11 +147,11 @@ public class SocketServer
 					if(key.isValid())
 					{
 						if(key.isAcceptable())
-							this.accept(key);
+							accept(key);
 
 						else
 							if(key.isReadable())
-								this.read(key);
+								read(key);
 					}
 				}
 			}
@@ -91,7 +164,7 @@ public class SocketServer
 		}
 	}
 
-	private void accept(SelectionKey key)
+	private static void accept(SelectionKey key)
 	{
 		try
 		{
@@ -101,9 +174,9 @@ public class SocketServer
 
 			Socket socket = socketChannel.socket();
 			SocketAddress remoteAddress = socket.getRemoteSocketAddress();
-			System.out.println("Connected to " + remoteAddress);
+			controller.writeToConsole("Connected to " + remoteAddress);
 
-			socketChannel.register(this.selector, SelectionKey.OP_READ);
+			socketChannel.register(selector, SelectionKey.OP_READ);
 		}
 
 		catch(IOException e)
@@ -112,7 +185,7 @@ public class SocketServer
 		}
 	}
 
-	private void read(SelectionKey key)
+	private static void read(SelectionKey key)
 	{
 		SocketChannel socketChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = ByteBuffer.allocate(1024);
@@ -219,7 +292,7 @@ public class SocketServer
 						while(fileBuffer.hasRemaining())
 							totalSent += socketChannel.write(fileBuffer);
 						
-						System.out.println("File sent. Size: " + totalSent);
+						controller.writeToConsole("File sent. Size: " + totalSent);
 					}
 					
 					return;
@@ -310,7 +383,7 @@ public class SocketServer
 		sendMsg(msg.getBytes(StandardCharsets.UTF_8), curr, curr.findClientBySocket(socketChannel));
 	}
 	
-	private void userDisconnect(String msg, SocketChannel socketChannel, SelectionKey key)
+	private static void userDisconnect(String msg, SocketChannel socketChannel, SelectionKey key)
 	{
 		ClientData client = null;
 		
@@ -358,7 +431,7 @@ public class SocketServer
 		key.cancel();
 	}
 	
-	private void listUsers(String msg, SocketChannel socketChannel)
+	private static void listUsers(String msg, SocketChannel socketChannel)
 	{
 		Room curr = findWhichRoom(socketChannel);
 		
@@ -382,7 +455,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(userList.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println(client.getUsername() + ": User List sent");
+			controller.writeToConsole(client.getUsername() + ": User List sent");
 		}
 		
 		catch(Exception e)
@@ -391,7 +464,7 @@ public class SocketServer
 		}
 	}
 	
-	private void listRooms(String msg, SocketChannel socketChannel)
+	private static void listRooms(String msg, SocketChannel socketChannel)
 	{
 		Room curr = findWhichRoom(socketChannel);
 		
@@ -408,7 +481,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println(client.getUsername() + ": List of Rooms Sent");
+			controller.writeToConsole(client.getUsername() + ": List of Rooms Sent");
 		}
 		
 		catch(Exception e)
@@ -417,7 +490,7 @@ public class SocketServer
 		}
 	}
 	
-	private void changeRoom(String msg, SocketChannel socketChannel)
+	private static void changeRoom(String msg, SocketChannel socketChannel)
 	{
 		Room curr = findWhichRoom(socketChannel);
 		
@@ -480,7 +553,7 @@ public class SocketServer
 				ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 				socketChannel.write(sendBuffer);
 				sendBuffer.rewind();
-				System.out.println(client.getUsername() + ": Changed to Room #" + roomNum);
+				controller.writeToConsole(client.getUsername() + ": Changed to Room #" + roomNum);
 			}
 		}
 		
@@ -495,7 +568,7 @@ public class SocketServer
 		sendMsgToHarmonyClients(msg.getBytes(StandardCharsets.UTF_8));
 	}
 	
-	private void whatRoom(String msg, SocketChannel socketChannel)
+	private static void whatRoom(String msg, SocketChannel socketChannel)
 	{
 		Room curr = findWhichRoom(socketChannel);
 		
@@ -520,7 +593,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println(client.getUsername() + ": What Room are they in");
+			controller.writeToConsole(client.getUsername() + ": What Room are they in");
 		}
 		
 		catch(Exception e)
@@ -529,7 +602,7 @@ public class SocketServer
 		}
 	}
 	
-	private void dm(String msg, SocketChannel socketChannel)
+	private static void dm(String msg, SocketChannel socketChannel)
 	{
 		String[] parts = msg.split(" ");
 		
@@ -559,7 +632,7 @@ public class SocketServer
 			ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketToSendTo.write(bufferSend);
 			bufferSend.rewind();
-			System.out.println(client.getUsername() + ": DM to " + clientToSendTo.getUsername());
+			controller.writeToConsole(client.getUsername() + ": DM to " + clientToSendTo.getUsername());
 		}
 		
 		catch(Exception e)
@@ -568,7 +641,7 @@ public class SocketServer
 		}
 	}
 	
-	private void registerUser(String msg, SocketChannel socketChannel)
+	private static void registerUser(String msg, SocketChannel socketChannel)
 	{
 		ClientData clientToAdd = null;
 		Socket socket = socketChannel.socket();
@@ -596,7 +669,7 @@ public class SocketServer
 			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(sendBuffer);
 			sendBuffer.rewind();
-			System.out.println(clientToAdd.getUsername() + ": Has been Registered");
+			controller.writeToConsole(clientToAdd.getUsername() + ": Has been Registered");
 		}
 		
 		catch(Exception e)
@@ -605,7 +678,7 @@ public class SocketServer
 		}
 	}
 	
-	private void checkUser(String msg, SocketChannel socketChannel)
+	private static void checkUser(String msg, SocketChannel socketChannel)
 	{
 		String[] parts = msg.split(" ");
 		String username = parts[1];
@@ -624,7 +697,7 @@ public class SocketServer
 			ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
 			socketChannel.write(bufferSend);
 			bufferSend.rewind();
-			System.out.println(username + ": Did a User Check");
+			controller.writeToConsole(username + ": Did a User Check");
 		}
 		
 		catch(Exception e)
@@ -633,7 +706,7 @@ public class SocketServer
 		}
 	}
 	
-	private void updateUser(String msg, SocketChannel socketChannel)
+	private static void updateUser(String msg, SocketChannel socketChannel)
 	{
 		Room curr = findWhichRoom(socketChannel);
 		ClientData client = curr.findClientBySocket(socketChannel);
@@ -669,7 +742,7 @@ public class SocketServer
 		}
 	}
 
-	private void sendMsg(byte[] msg, Room curr, ClientData sender)
+	private static void sendMsg(byte[] msg, Room curr, ClientData sender)
 	{
 		try
 		{
@@ -713,7 +786,7 @@ public class SocketServer
 						ByteBuffer buffer = ByteBuffer.wrap(msg);
 						socketChannel.write(buffer);
 						buffer.rewind();
-						System.out.println(client.getUsername() + ": Msg Sent");
+						controller.writeToConsole(client.getUsername() + ": Msg Sent");
 					}
 				}
 			}
@@ -725,11 +798,11 @@ public class SocketServer
 		}
 	}
 	
-	private void sendMsgToHarmonyClients(byte[] msg)
+	private static void sendMsgToHarmonyClients(byte[] msg)
 	{
 		try
 		{			
-			System.out.println("Message: " + new String(msg, StandardCharsets.UTF_8));
+			controller.writeToConsole("Message: " + new String(msg, StandardCharsets.UTF_8));
 			
 			for(SelectionKey key : selector.keys())
 			{
@@ -757,7 +830,7 @@ public class SocketServer
 						ByteBuffer buffer = ByteBuffer.wrap(msg);
 						socketChannel.write(buffer);
 						buffer.rewind();
-						System.out.println(client.getUsername() + ": Msg Sent");
+						controller.writeToConsole(client.getUsername() + ": Msg Sent");
 					}
 				}
 			}
@@ -769,7 +842,7 @@ public class SocketServer
 		}
 	}
 	
-	private Room findWhichRoom(SocketChannel socketChannel)
+	private static Room findWhichRoom(SocketChannel socketChannel)
 	{
 		if(roomOne.containsClientBySocketChannel(socketChannel))
 			return roomOne;
@@ -786,7 +859,7 @@ public class SocketServer
 		return null;
 	}
 	
-	private int findRoomNum(Room room)
+	private static int findRoomNum(Room room)
 	{
 		int roomNum = -1;
 		if(room.equals(roomOne))
@@ -801,7 +874,7 @@ public class SocketServer
 		return roomNum;
 	}
 	
-	private String getRandomColor()
+	private static String getRandomColor()
 	{
 		Random r = new Random();
 		Color userColor = Color.rgb(r.nextInt(256), r.nextInt(256), r.nextInt(256));
