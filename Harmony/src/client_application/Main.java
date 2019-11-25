@@ -361,10 +361,7 @@ public class Main extends Application
 	public static boolean sendFile(String userToSendTo)
 	{
 		if (fileToSend == null || !fileToSend.exists() || !usersInRoom.contains(userToSendTo))
-		{
-			// TODO
 			return false;
-		}
 
 		try
 		{
@@ -384,10 +381,7 @@ public class Main extends Application
 			while((count = in.read(buffer)) > 0)
 				out.write(buffer, 0, count);
 
-//			writer.close();
 			in.close();
-//			out.close();
-
 			return true;
 		}
 
@@ -397,6 +391,14 @@ public class Main extends Application
 		}
 
 		return false;
+	}
+	
+	public static String getRandomHexColor()
+	{
+		Random r = new Random();
+		Color temp = Color.rgb(r.nextInt(256), r.nextInt(256), r.nextInt(256));
+		
+		return colorToHex(temp);
 	}
 
 	private static String colorToHex(Color color)

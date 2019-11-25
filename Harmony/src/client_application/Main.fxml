@@ -46,7 +46,7 @@
       <Line fx:id="minimizeIcon" endX="-88.0" endY="-3.814697265625E-6" layoutX="1339.0" layoutY="11.0" startX="-104.5" startY="-3.814697265625E-6" stroke="#b9bbbe" />
       <Rectangle fx:id="minimizeHitBox" fill="#202225" height="23.0" layoutX="1230.0" onMouseClicked="#minimizeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
       <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="1255.0" onMouseClicked="#closeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
-      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@chatDisplay.css" visible="false">
+      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@chatDisplay.css">
          <children>
             <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@chatDisplay.css">
                <content>
@@ -70,30 +70,40 @@
                   <Circle fill="WHITE" opacity="0.01" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
                </children>
             </Group>
-            <Pane fx:id="fileTransferPane" layoutX="-13.0" layoutY="486.0" prefHeight="149.0" prefWidth="743.0" visible="false">
+            <Pane fx:id="fileTransferPane" layoutX="-13.0" layoutY="448.0" prefHeight="187.0" prefWidth="743.0">
                <children>
-                  <Rectangle fill="#2f3136" height="123.0" layoutY="26.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
-                  <ComboBox fx:id="fileUserSelect" layoutX="486.0" layoutY="48.0" prefWidth="150.0" promptText="Select a User" />
-                  <Text fill="WHITE" layoutX="107.0" layoutY="68.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Who would you like to send the file to:">
+                  <Rectangle fill="#2f3136" height="123.0" layoutY="65.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
+                  <ComboBox fx:id="fileUserSelect" layoutX="486.0" layoutY="87.0" prefWidth="150.0" promptText="Select a User" />
+                  <Text fill="WHITE" layoutX="107.0" layoutY="107.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Who would you like to send the file to:">
                      <font>
                         <Font name="Arial" size="22.0" />
                      </font>
                   </Text>
-                  <Button layoutX="316.0" layoutY="98.0" mnemonicParsing="false" onMouseClicked="#selectFileBtn" prefWidth="110.0" text="Select File">
+                  <Button layoutX="316.0" layoutY="137.0" mnemonicParsing="false" onMouseClicked="#selectFileBtn" prefWidth="110.0" text="Select File">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font>
                   </Button>
-                  <Button layoutX="195.0" layoutY="98.0" mnemonicParsing="false" onMouseClicked="#sendFile" prefWidth="110.0" text="Send File">
+                  <Button layoutX="195.0" layoutY="137.0" mnemonicParsing="false" onMouseClicked="#sendFile" prefWidth="110.0" text="Send File">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font>
                   </Button>
-                  <Button layoutX="439.0" layoutY="98.0" mnemonicParsing="false" onMouseClicked="#cancelFileSend" prefWidth="110.0" text="Cancel">
+                  <Button layoutX="439.0" layoutY="137.0" mnemonicParsing="false" onMouseClicked="#cancelFileSend" prefWidth="110.0" text="Cancel">
                      <font>
                         <Font name="Arial" size="18.0" />
                      </font>
                   </Button>
+                  <Text fx:id="invalidUserFileTransfer" fill="RED" layoutX="498.0" layoutY="59.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Invalid User">
+                     <font>
+                        <Font name="Arial" size="24.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="invalidFileTransfer" fill="RED" layoutX="64.0" layoutY="161.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Invalid File">
+                     <font>
+                        <Font name="Arial" size="24.0" />
+                     </font>
+                  </Text>
                </children>
             </Pane>
             <Text fx:id="msgCountTxt" fill="#d7d5d9" layoutX="-12.0" layoutY="-19.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Message Count: 0" textAlignment="RIGHT">
@@ -123,7 +133,7 @@
             <Image url="@../resources/room%20icons/Room_3.png" />
          </image>
       </ImageView>
-      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0">
+      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0" visible="false">
          <children>
             <Rectangle fill="#36393f" height="635.0" layoutX="589.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="239.0" />
             <ImageView fitHeight="93.0" fitWidth="493.0" layoutX="164.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true">
