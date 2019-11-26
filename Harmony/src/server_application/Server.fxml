@@ -7,6 +7,7 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Line?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
@@ -24,7 +25,7 @@
             <Image url="@../resources/Icon.png" />
          </image>
       </ImageView>
-      <Hyperlink fx:id="link" layoutX="332.0" layoutY="243.0" onAction="#openGitHub" text="Github Link" textAlignment="CENTER" underline="true">
+      <Hyperlink fx:id="link" layoutX="332.0" layoutY="243.0" onAction="#openGitHub" style="-fx-border-color: null; -fx-border-style: solid; -fx-border-width: 0px;" text="Github Link" textAlignment="CENTER" underline="true">
          <font>
             <Font name="Arial" size="24.0" />
          </font>
@@ -54,5 +55,10 @@
             <Font name="Arial" size="28.0" />
          </font>
       </Text>
+      <Rectangle fx:id="closeBG" fill="#202225" height="23.0" layoutX="775.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
+      <Line fx:id="closeIcon2" endX="-92.0" endY="-12.0" layoutX="885.0" layoutY="17.0" startX="-101.75" startY="-0.75" stroke="#b9bbbe" />
+      <Line fx:id="closeIcon1" endX="-92.0" endY="-0.75" layoutX="885.0" layoutY="17.0" startX="-101.75" startY="-12.0" stroke="#b9bbbe" />
+      <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="775.0" onMouseClicked="#close" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
+      <Rectangle fx:id="topBar" fill="WHITE" height="23.0" opacity="0.0" stroke="BLACK" strokeType="INSIDE" width="773.0" />
    </children>
 </AnchorPane>

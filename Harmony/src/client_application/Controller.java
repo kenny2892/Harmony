@@ -64,9 +64,12 @@ public class Controller
 	@FXML private ScrollPane mainTxtScrollPane;
 	@FXML private TextArea enterMsgTextArea;
 	@FXML private TextFlow peopleTextFlow;
+	@FXML private Text msgCountTxt;
+
 	@FXML private Pane fileTransferPane;
 	@FXML private ComboBox<String> fileUserSelect;
-	@FXML private Text msgCountTxt;
+	@FXML private Text invalidUserFileTransfer;
+	@FXML private Text invalidFileTransfer;
 	
 	@FXML private Group serverScreen;
 	@FXML private Group loginScreen;
@@ -571,9 +574,7 @@ public class Controller
 			return;
 		}
 		
-		Main.msgCountIncrease(this.roomNum);
-		
-		if(Main.getTotalMsgCount() == 1)
+		if(Main.getTotalMsgCount() == 0)
 		{
 			if(msg.contains(", "))
 				parsedMsg = msg.split(", ");
@@ -587,19 +588,61 @@ public class Controller
 			roomNames[0] = parsedMsg[0];
 			roomNames[1] = parsedMsg[1];
 			roomNames[2] = parsedMsg[2];
+			Main.increaseTotalMsgCount();
 			return;
 		}
 		
-		String usernameOfSender = parsedMsg[0];
-		String hexColor = parsedMsg[1];
-		String iconID = parsedMsg[2];
-		String roomNum = parsedMsg[parsedMsg.length - 1];
+		String usernameOfSender = "";
+		String hexColor = "";
+		String iconID = "";
+		String roomNum = "";
 		
-		msg = "";
-		for(int i = 3; i < parsedMsg.length - 1; i++)
-			msg += parsedMsg[i] + "//";
+		if(parsedMsg == null || parsedMsg.length != 5) // Non-Harmony Server
+		{
+			if(msg.contains(": ")) // username: msg
+			{
+				usernameOfSender = msg.substring(0, msg.indexOf(":"));
+				msg = msg.substring(msg.indexOf(": ") + 2);
+			}
+			
+			else // username msg
+			{
+				usernameOfSender = msg.substring(0, msg.indexOf(" "));
+				msg = msg.substring(msg.indexOf(" ") + 1);
+			}
+			
+			hexColor = Main.getRandomHexColor();
+			iconID = 100 + "";
+			roomNum = this.roomNum + "";
+		}
 		
-		msg = msg.substring(0, msg.length() - 2);
+		else // Harmony Server
+		{
+			usernameOfSender = parsedMsg[0];
+			hexColor = parsedMsg[1];
+			iconID = parsedMsg[2];
+			roomNum = parsedMsg[parsedMsg.length - 1];
+			msg = "";
+			
+			for(int i = 3; i < parsedMsg.length - 1; i++)
+				msg += parsedMsg[i] + "//";
+			
+			msg = msg.substring(0, msg.length() - 2);
+		}
+		
+		int intendedRoom = 0;
+		try
+		{
+			intendedRoom = Integer.parseInt(roomNum);
+		}
+
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return;
+		}
+		
+		Main.msgCountIncrease(intendedRoom);
 		
 		Node icon = getUserIcon(iconID, hexColor, 25);
 
@@ -641,18 +684,6 @@ public class Controller
 
 		TextFlow iconFlow = new TextFlow(new Text("\n"), icon);
 		TextFlow msgFlow = new TextFlow(new Text("\n     "), username, date, new Text("\n     "), txtMsg);
-
-		int intendedRoom = 0;
-		try
-		{
-			intendedRoom = Integer.parseInt(roomNum);
-		}
-
-		catch(Exception e)
-		{
-			e.printStackTrace();
-			return;
-		}
 
 		switch(intendedRoom)
 		{
@@ -886,7 +917,7 @@ public class Controller
 	
 	public void iconRightArrow()
 	{
-		if(Main.getIconID() + 1 <= Main.MAX_ICON_ID + 1)
+		if(Main.getIconID() + 1 <= Main.MAX_ICON_ID)
 		{
 			Main.setIconID(Main.getIconID() + 1);
 			updateIconPreview();
@@ -895,7 +926,7 @@ public class Controller
 	
 	public void iconLeftArrow()
 	{
-		if(Main.getIconID() - 1 >= 1)
+		if(Main.getIconID() - 1 >= 0)
 		{
 			Main.setIconID(Main.getIconID() - 1);
 			updateIconPreview();
@@ -1031,14 +1062,20 @@ public class Controller
 		
 		fileUserSelect.setItems(users);
 		fileTransferPane.setVisible(true);
+		invalidFileTransfer.setVisible(false);
+		invalidUserFileTransfer.setVisible(false);
 	}
 	
 	public void sendFile()
 	{
-		if(Main.sendFile(fileUserSelect.getValue()))
+		if(!Main.isInRoom(fileUserSelect.getValue()))
+			invalidUserFileTransfer.setVisible(true);
+		
+		else if(Main.sendFile(fileUserSelect.getValue()))
 			fileTransferPane.setVisible(false);
 		
-		// TODO Else
+		else
+			invalidFileTransfer.setVisible(true);
 	}
 	
 	public void selectFileBtn()
