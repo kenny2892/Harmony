@@ -812,7 +812,7 @@ public class SocketServer extends Application
 							if(fixedMsg.contains("\r\n"))
 								fixedMsg = fixedMsg.replace("\r\n", "");
 							
-							String newMsg = client.getUsername() + "//" + client.getColor() + "//" + client.getIconID() + "//" + fixedMsg + "//" + roomNum;
+							String newMsg = sender.getUsername() + "//" + sender.getColor() + "//" + sender.getIconID() + "//" + fixedMsg + "//" + findRoomNum(curr);
 							msg = newMsg.getBytes(StandardCharsets.UTF_8);
 							send = true;
 						}
