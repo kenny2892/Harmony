@@ -2,11 +2,13 @@ package server_application;
 
 import java.awt.Desktop;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -23,9 +25,11 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class SocketServer extends Application
 {
@@ -33,7 +37,10 @@ public class SocketServer extends Application
 	private static Room roomOne, roomTwo, roomThree, notInRoom;
 	private static InetSocketAddress listeningAddress;
 	
+	private static boolean running;
+	private static Stage stage;
 	private static ServerController controller;
+	private static double xOffset = 0, yOffset = 0;
 	
 	public static void main(String[] args)
 	{
@@ -54,6 +61,7 @@ public class SocketServer extends Application
 			primaryStage.setScene(scene);
 			primaryStage.setResizable(false);
 			primaryStage.sizeToScene();
+			primaryStage.initStyle(StageStyle.UNDECORATED);
 			primaryStage.getIcons().add(new Image(getClass().getResource("/resources/System Icon.png").toExternalForm()));
 			primaryStage.setTitle("Harmony Server App");
 			primaryStage.show();
@@ -67,12 +75,40 @@ public class SocketServer extends Application
 
 			primaryStage.setX(newX);
 			primaryStage.setY(newY);
+			
+			stage = primaryStage;
 		}
 
 		catch(Exception e)
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	public static void stopServer()
+	{
+		running = false;
+		System.exit(0);
+	}
+
+	public static void setXOffset(double newX)
+	{
+		xOffset = newX;
+	}
+
+	public static void setYOffset(double newY)
+	{
+		yOffset = newY;
+	}
+
+	public static void setX(MouseEvent event)
+	{
+		stage.setX(event.getScreenX() - xOffset);
+	}
+
+	public static void setY(MouseEvent event)
+	{
+		stage.setY(event.getScreenY() - yOffset);
 	}
 	
 	public static void openGitHub()
@@ -95,22 +131,23 @@ public class SocketServer extends Application
 	
 	public static void startServer(int port)
 	{
-		listeningAddress = new InetSocketAddress("localhost", port); // For Testing
-//		try
-//		{
-//			listeningAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), port);
-//		}
-//		
-//		catch(UnknownHostException e)
-//		{
-//			e.printStackTrace();
-//		}
+//		listeningAddress = new InetSocketAddress("localhost", port); // For Testing
+		try
+		{
+			listeningAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), port);
+		}
+		
+		catch(UnknownHostException e)
+		{
+			e.printStackTrace();
+		}
 
 		roomOne = new Room();
 		roomTwo = new Room();
 		roomThree = new Room();
 		notInRoom = new Room();
 		
+		running = true;
 		new Thread(new Runnable()
 		{
 			@Override
@@ -134,7 +171,7 @@ public class SocketServer extends Application
 			serverChannel.socket().bind(listeningAddress);
 			serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-			while(true)
+			while(running)
 			{
 				selector.select(); // Wait here until something happens
 

@@ -96,7 +96,7 @@ public class Main extends Application
 
 			String home = System.getProperty("user.home");
 			downloadDirectory = new File(home + "/Downloads/");
-			iconID = 1;
+			iconID = 0;
 		}
 
 		catch(Exception e)
@@ -208,7 +208,7 @@ public class Main extends Application
 
 	public static boolean setIconID(int id)
 	{
-		if (iconID < 1 || iconID > MAX_ICON_ID)
+		if (iconID < 0 || iconID > MAX_ICON_ID)
 			return false;
 
 		iconID = id;
@@ -484,6 +484,11 @@ public class Main extends Application
 	public static int getTotalMsgCount()
 	{
 		return totalMsgCount;
+	}
+
+	public static void increaseTotalMsgCount()
+	{
+		totalMsgCount++;
 	}
 
 	public static void openGitHub()

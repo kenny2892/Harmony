@@ -574,6 +574,24 @@ public class Controller
 			return;
 		}
 		
+		if(Main.getTotalMsgCount() == 0)
+		{
+			if(msg.contains(", "))
+				parsedMsg = msg.split(", ");
+			
+			else
+				parsedMsg = msg.split(",");
+			
+			if(parsedMsg.length != 3)
+				return;
+			
+			roomNames[0] = parsedMsg[0];
+			roomNames[1] = parsedMsg[1];
+			roomNames[2] = parsedMsg[2];
+			Main.increaseTotalMsgCount();
+			return;
+		}
+		
 		String usernameOfSender = "";
 		String hexColor = "";
 		String iconID = "";
@@ -625,23 +643,6 @@ public class Controller
 		}
 		
 		Main.msgCountIncrease(intendedRoom);
-		
-		if(Main.getTotalMsgCount() == 1)
-		{
-			if(msg.contains(", "))
-				parsedMsg = msg.split(", ");
-			
-			else
-				parsedMsg = msg.split(",");
-			
-			if(parsedMsg.length != 3)
-				return;
-			
-			roomNames[0] = parsedMsg[0];
-			roomNames[1] = parsedMsg[1];
-			roomNames[2] = parsedMsg[2];
-			return;
-		}
 		
 		Node icon = getUserIcon(iconID, hexColor, 25);
 
