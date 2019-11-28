@@ -953,6 +953,18 @@ public class Controller
 		Main.sendMsg("\\userUpdate " + Main.getHexColor() + " " + Main.getIconID());
 	}
 	
+	public void updateDownloadPath()
+	{
+		Platform.runLater(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				filePathTxt.setText(Main.getDownloadDirPath());
+			}
+		});
+	}
+	
 	public void startEnter()
 	{
 		if(roomNum == 0)
@@ -1064,6 +1076,11 @@ public class Controller
 				Main.setY(event);
 			}
 		});
+	}
+	
+	public void selectDownloadDirBtn()
+	{
+		Main.selectDirectory();
 	}
 	
 	public void sendFileBtn()

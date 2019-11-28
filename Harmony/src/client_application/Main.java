@@ -22,6 +22,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -33,6 +34,8 @@ public class Main extends Application
 	private static String username;
 	private static Color userColor;
 	private static int iconID;
+	private static Controller controller;
+	
 	private static Stage stage;
 	private static ArrayList<String> usersInRoom;
 	private static ArrayList<Node> roomOneChat; // Arrows turn white, possible add loading room screen
@@ -66,9 +69,12 @@ public class Main extends Application
 	{
 		try
 		{
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("/client_application/Main.fxml"));
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(Main.class.getResource("/client_application/Main.fxml"));
 			Parent root = loader.load();
 			Scene scene = new Scene(root);
+			controller = loader.getController();
+
 			primaryStage.setScene(scene);
 			primaryStage.setResizable(false);
 			primaryStage.sizeToScene();
@@ -269,6 +275,32 @@ public class Main extends Application
 	{
 		return downloadDirectory.getPath();
 	}
+	
+	public static boolean setDownloadDirthPath(File newDir)
+	{
+		if(newDir == null || !newDir.exists())
+			return false;
+		
+		downloadDirectory = newDir;
+		return true;
+	}
+	
+	public static void selectDirectory()
+	{
+		if (stage == null)
+			return;
+
+		DirectoryChooser chooser = new DirectoryChooser();
+		chooser.setTitle("Choose a Download Directory");
+
+		File temp = chooser.showDialog(stage);
+		
+		if(temp != null)
+		{
+			downloadDirectory = temp;
+			controller.updateDownloadPath();
+		}
+	}
 
 	public static void minimizeApp()
 	{
@@ -355,7 +387,10 @@ public class Main extends Application
 		FileChooser chooser = new FileChooser();
 		chooser.setTitle("Choose a File to Send to ");
 
-		fileToSend = chooser.showOpenDialog(stage);
+		File temp = chooser.showOpenDialog(stage);
+		
+		if(temp != null)
+			fileToSend = temp;
 	}
 
 	public static boolean sendFile(String userToSendTo)
