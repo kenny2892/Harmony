@@ -547,12 +547,15 @@ public class SocketServer extends Application
 		
 		String[] parts = msg.split(" ");
 		String requestedRoom = parts[1].toLowerCase();
+		Room newRoom = null;		
 		
 		int roomNum = -1;
 		switch(requestedRoom)
 		{
 			case "-1":
 				notInRoom.addClient(client);
+				newRoom = notInRoom;
+				roomNum = -1;
 				break;
 			
 			case "one":
@@ -561,6 +564,7 @@ public class SocketServer extends Application
 				roomOne.addClient(client);
 				msg = "Server: Joined Room One.";
 				roomNum = 1;
+				newRoom = roomOne;
 				break;
 				
 			case "two":
@@ -569,6 +573,7 @@ public class SocketServer extends Application
 				roomTwo.addClient(client);
 				msg = "Server: Joined Room Two.";
 				roomNum = 2;
+				newRoom = roomTwo;
 				break;
 				
 			case "three":
@@ -577,6 +582,7 @@ public class SocketServer extends Application
 				roomThree.addClient(client);
 				msg = "Server: Joined Room Three.";
 				roomNum = 3;
+				newRoom = roomThree;
 				break;
 				
 			default:
@@ -591,6 +597,20 @@ public class SocketServer extends Application
 				socketChannel.write(sendBuffer);
 				sendBuffer.rewind();
 				controller.writeToConsole(client.getUsername() + ": Changed to Room #" + roomNum);
+			}
+			
+			else
+			{
+				for(ClientData clientToBeSent : newRoom.getClientList())
+				{
+					Room otherRoom = findWhichRoom(clientToBeSent.getSocketChannel());
+					
+					msg = "USER//" + clientToBeSent.getUsername() + "//" + clientToBeSent.getColor() + "//" + clientToBeSent.getIconID() + "//" + findRoomNum(otherRoom);
+					ByteBuffer updateBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+					socketChannel.write(updateBuffer);
+					updateBuffer.rewind();
+					controller.writeToConsole(client.getUsername() + ": Sent Add Request for " + client.getUsername());	
+				}
 			}
 		}
 		
@@ -786,6 +806,10 @@ public class SocketServer extends Application
 			if(curr == null)
 				return;
 			
+			controller.writeToConsole("Message: " + new String(msg, StandardCharsets.UTF_8));
+			
+			byte[] ogMsg = msg;
+			
 			for(SelectionKey key : selector.keys())
 			{
 				if(key.isValid() && key.channel() instanceof SocketChannel)
@@ -808,7 +832,7 @@ public class SocketServer extends Application
 							
 						if(roomNum != -1)
 						{
-							String fixedMsg = new String(msg, StandardCharsets.UTF_8);
+							String fixedMsg = new String(ogMsg, StandardCharsets.UTF_8);
 							if(fixedMsg.contains("\r\n"))
 								fixedMsg = fixedMsg.replace("\r\n", "");
 							

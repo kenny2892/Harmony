@@ -70,7 +70,7 @@
                   <Circle fill="WHITE" opacity="0.01" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
                </children>
             </Group>
-            <Pane fx:id="fileTransferPane" layoutX="-13.0" layoutY="448.0" prefHeight="187.0" prefWidth="743.0">
+            <Pane fx:id="fileTransferPane" layoutX="-13.0" layoutY="448.0" prefHeight="187.0" prefWidth="743.0" visible="false">
                <children>
                   <Rectangle fill="#2f3136" height="123.0" layoutY="65.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
                   <ComboBox fx:id="fileUserSelect" layoutX="486.0" layoutY="87.0" prefWidth="150.0" promptText="Select a User" />
@@ -109,6 +109,12 @@
             <Text fx:id="msgCountTxt" fill="#d7d5d9" layoutX="-12.0" layoutY="-19.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Message Count: 0" textAlignment="RIGHT">
                <font>
                   <Font name="Arial" size="34.0" />
+               </font>
+            </Text>
+            <Rectangle fill="#292b2f" height="44.0" layoutX="-224.0" layoutY="592.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="199.0" />
+            <Text fx:id="usernameDisplay" fill="WHITE" layoutX="-180.0" layoutY="613.0" strokeType="OUTSIDE" strokeWidth="0.0" text="username">
+               <font>
+                  <Font name="Arial Bold" size="12.0" />
                </font>
             </Text>
          </children>
