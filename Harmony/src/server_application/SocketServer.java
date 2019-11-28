@@ -44,6 +44,7 @@ public class SocketServer extends Application
 	private static double xOffset = 0, yOffset = 0;
 	
 	private static HashMap<String, String> privateChat;
+	private static HashMap<String, String> privateChatOldRooms;
 	
 	public static void main(String[] args)
 	{
@@ -152,6 +153,7 @@ public class SocketServer extends Application
 		privateRoom = new Room();
 		
 		privateChat = new HashMap<String, String>();
+		privateChatOldRooms = new HashMap<String, String>();
 		
 		running = true;
 		new Thread(new Runnable()
@@ -712,16 +714,19 @@ public class SocketServer extends Application
 			case 1:
 				client = roomOne.findClientBySocket(socketChannel);
 				roomOne.removeClient(socketChannel);
+				privateChatOldRooms.put(client.getUsername(), "1");
 				break;
 				
 			case 2:
 				client = roomTwo.findClientBySocket(socketChannel);
 				roomTwo.removeClient(socketChannel);
+				privateChatOldRooms.put(client.getUsername(), "2");
 				break;
 				
 			case 3:
 				client = roomThree.findClientBySocket(socketChannel);
 				roomThree.removeClient(socketChannel);
+				privateChatOldRooms.put(client.getUsername(), "3");
 				break;
 			
 			case 4:
@@ -736,6 +741,8 @@ public class SocketServer extends Application
 		
 		privateRoom.addClient(client);
 		privateChat.put(client.getUsername(), userToChatWith);
+		
+		controller.writeToConsole(client.getUsername() + " has entered Private Mode. Linked to: " + userToChatWith);
 	}
 	
 	private static void leavePrivate(SocketChannel socketChannel)
@@ -746,6 +753,27 @@ public class SocketServer extends Application
 			return;
 		
 		privateChat.remove(client.getUsername());
+		
+		switch(privateChatOldRooms.get(client.getUsername()))
+		{
+			case "1":
+				roomOne.addClient(client);
+				break;
+				
+			case "2":
+				roomTwo.addClient(client);
+				break;
+				
+			case "3":
+				roomThree.addClient(client);
+				break;
+				
+			default:
+				notInRoom.addClient(client);
+				break;
+		}
+		
+		controller.writeToConsole(client.getUsername() + " has left Private Mode.");
 	}
 	
 	private static void dm(String msg, SocketChannel socketChannel)
@@ -896,7 +924,10 @@ public class SocketServer extends Application
 				return;
 			
 			else if(curr.equals(privateRoom))
+			{
 				sendPrivateChatMsg(msg, sender);
+				return;
+			}
 			
 			controller.writeToConsole("Message: " + new String(msg, StandardCharsets.UTF_8));
 			
@@ -919,7 +950,7 @@ public class SocketServer extends Application
 					{
 						String recieveFrom = privateChat.get(reciever.getUsername());
 						
-						if(recieveFrom == null && sender.getUsername().compareTo(recieveFrom) != 0)
+						if(recieveFrom == null || sender.getUsername().compareTo(recieveFrom) != 0)
 							continue;
 					}
 					
@@ -962,7 +993,11 @@ public class SocketServer extends Application
 	private static void sendPrivateChatMsg(byte[] msg, ClientData sender)
 	{
 		String personToSendTo = privateChat.get(sender.getUsername());
-		int roomToSendTo = 0;
+		
+		if(personToSendTo == null)
+			return;
+		
+		int roomToSendTo = 1;
 		ClientData clientToSendTo = roomOne.findClientByUsername(personToSendTo);
 		
 		if(clientToSendTo == null)
