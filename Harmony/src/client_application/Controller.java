@@ -65,6 +65,7 @@ public class Controller
 	@FXML private TextArea enterMsgTextArea;
 	@FXML private TextFlow peopleTextFlow;
 	@FXML private Text msgCountTxt;
+	@FXML private Text usernameDisplay;
 
 	@FXML private Pane fileTransferPane;
 	@FXML private ComboBox<String> fileUserSelect;
@@ -251,6 +252,15 @@ public class Controller
 		
 		startRoomIcon.setImage(new Image(getClass().getResource("/resources/room icons/Start_Room.png").toExternalForm()));
 		msgCountTxt.setText("Message Count: " + Main.getRoomMsgCount(this.roomNum));
+		
+		Node icon = getUserIcon(Main.getIconID() + "", Main.getHexColor(), 17);
+		icon.setLayoutX(-219);
+		icon.setLayoutY(597);
+		
+		chatDisplay.getChildren().add(icon);
+		usernameDisplay.setText(Main.getUsername());
+		usernameDisplay.setFill(Color.web(Main.getHexColor()));
+		
 		return true;
 	}
 	
@@ -943,6 +953,18 @@ public class Controller
 		Main.sendMsg("\\userUpdate " + Main.getHexColor() + " " + Main.getIconID());
 	}
 	
+	public void updateDownloadPath()
+	{
+		Platform.runLater(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				filePathTxt.setText(Main.getDownloadDirPath());
+			}
+		});
+	}
+	
 	public void startEnter()
 	{
 		if(roomNum == 0)
@@ -1054,6 +1076,11 @@ public class Controller
 				Main.setY(event);
 			}
 		});
+	}
+	
+	public void selectDownloadDirBtn()
+	{
+		Main.selectDirectory();
 	}
 	
 	public void sendFileBtn()
