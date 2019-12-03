@@ -11,6 +11,8 @@ import java.net.Socket;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import javafx.application.Application;
@@ -38,7 +40,10 @@ public class Main extends Application
 	
 	private static Stage stage;
 	private static ArrayList<String> usersInRoom;
-	private static ArrayList<Node> roomOneChat; // Arrows turn white, possible add loading room screen
+	private static ArrayList<String> usersToDM;
+	private static HashMap<String, List<Node>> dmMsgs;
+	private static String currentDm;
+	private static ArrayList<Node> roomOneChat;
 	private static ArrayList<Node> roomTwoChat;
 	private static ArrayList<Node> roomThreeChat;
 	private static int totalMsgCount = 0;
@@ -56,7 +61,7 @@ public class Main extends Application
 
 	public enum StartMode
 	{
-		TITLE, SETTINGS
+		TITLE, SETTINGS, DM
 	}
 
 	public enum TitleMode
@@ -98,7 +103,11 @@ public class Main extends Application
 			roomOneChat = new ArrayList<Node>();
 			roomTwoChat = new ArrayList<Node>();
 			roomThreeChat = new ArrayList<Node>();
+			
 			usersInRoom = new ArrayList<String>();
+			usersToDM = new ArrayList<String>();
+			dmMsgs = new HashMap<String, List<Node>>();
+			
 
 			String home = System.getProperty("user.home");
 			downloadDirectory = new File(home + "/Downloads/");
@@ -269,6 +278,16 @@ public class Main extends Application
 	public static ArrayList<String> getUserArray()
 	{
 		return usersInRoom;
+	}
+	
+	public static boolean isInDMs(String userToCheck)
+	{
+		return usersToDM.contains(userToCheck);
+	}
+	
+	public static void addToDMs(String userToAdd)
+	{
+		usersToDM.add(userToAdd);
 	}
 
 	public static String getDownloadDirPath()
@@ -524,6 +543,62 @@ public class Main extends Application
 	public static void increaseTotalMsgCount()
 	{
 		totalMsgCount++;
+	}
+	
+	public static void setCurrentDmUser(String username)
+	{
+		if(username == null)
+			throw new IllegalArgumentException("Null username");
+		
+		if(usersToDM.contains(username))
+			currentDm = username;
+	}
+	
+	public static String getCurrentDmUser()
+	{
+		return currentDm;
+	}
+	
+	public static void setDmMsg(String username, List<Node> msgs)
+	{
+		if(currentDm == null)
+			return;
+		
+		else if(username == null)
+			throw new IllegalArgumentException("Null username");
+		
+		else if(msgs == null)
+			throw new IllegalArgumentException("Null msgs");
+		
+		if(dmMsgs.containsKey(username))
+			dmMsgs.remove(username);
+		
+		dmMsgs.put(username, msgs);
+	}
+	
+	public static void addDmMsg(String username, ArrayList<Node> msgs)
+	{
+		if(username == null)
+			throw new IllegalArgumentException("Null username");
+		
+		else if(msgs == null)
+			throw new IllegalArgumentException("Null msgs");
+		
+		List<Node> ogMsg = dmMsgs.get(username);
+		
+		if(ogMsg == null)
+			return;
+		
+		ogMsg.addAll(msgs);
+		dmMsgs.put(username, ogMsg);
+	}
+	
+	public static List<Node> getDmMsg(String username)
+	{
+		if(!dmMsgs.containsKey(username))
+			dmMsgs.put(username, new ArrayList<Node>());
+		
+		return dmMsgs.get(username);
 	}
 
 	public static void openGitHub()
