@@ -297,8 +297,31 @@
                   <Font name="Arial Bold" size="11.0" />
                </font>
             </Text>
-            <Pane fx:id="dmMsgPane" layoutX="-148.0" layoutY="-61.0" prefHeight="695.0" prefWidth="975.0" visible="false" />
-            <Pane fx:id="dmUserInputPane" layoutX="-25.0" layoutY="236.0" prefHeight="102.0" prefWidth="743.0">
+            <Pane fx:id="dmMsgPane" layoutX="-148.0" layoutY="-61.0" prefHeight="695.0" prefWidth="975.0">
+               <children>
+                  <ScrollPane fx:id="dmTxtScrollPane" hbarPolicy="NEVER" layoutX="3.0" layoutY="59.0" prefHeight="533.0" prefWidth="743.0" stylesheets="@chatDisplay.css">
+                     <content>
+                        <TextFlow fx:id="dmTextFlow" prefHeight="509.0" prefWidth="725.0" stylesheets="@chatDisplay.css" />
+                     </content>
+                  </ScrollPane>
+                  <Rectangle arcHeight="10.0" arcWidth="10.0" fill="#40444b" height="60.0" layoutX="15.0" layoutY="621.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="722.0" />
+                  <TextArea fx:id="enterDmTextArea" layoutX="79.0" layoutY="623.0" prefHeight="44.0" prefWidth="653.0" promptText="Message" stylesheets="@chatDisplay.css" wrapText="true">
+                     <font>
+                        <Font name="Arial" size="14.0" />
+                     </font>
+                  </TextArea>
+                  <Line endX="-100.0" endY="58.0" layoutX="171.0" layoutY="624.0" startX="-100.0" startY="-2.0" stroke="#36393f" />
+                  <Line endX="620.0" endY="-2.0" layoutX="115.0" layoutY="568.0" startX="-100.0" startY="-2.0" stroke="#727373" />
+                  <Group layoutX="43.0" layoutY="651.0" onMouseClicked="#sendFileBtn">
+                     <children>
+                        <Circle fill="#b9bbbe" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
+                        <Line endX="-67.0" endY="15.0" layoutX="67.0" layoutY="-8.0" startX="-67.0" startY="2.0" stroke="#40444b" strokeWidth="2.0" />
+                        <Line endX="15.0" endY="17.0" layoutX="-8.0" layoutY="-17.0" startX="2.0" startY="17.0" stroke="#40444b" strokeWidth="2.0" />
+                        <Circle fill="WHITE" opacity="0.01" radius="15.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" />
+                     </children>
+                  </Group>
+               </children></Pane>
+            <Pane fx:id="dmUserInputPane" layoutX="-25.0" layoutY="236.0" prefHeight="102.0" prefWidth="743.0" visible="false">
                <children>
                   <Rectangle fill="#2f3136" height="72.0" layoutY="28.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
                   <Text fill="WHITE" layoutX="98.0" layoutY="70.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Username:">
@@ -326,28 +349,7 @@
             </Pane>
             <ScrollPane layoutX="-343.0" layoutY="143.0" prefHeight="436.0" prefWidth="209.0" stylesheets="@chatDisplay.css">
                <content>
-                  <TextFlow fx:id="dmUserFlow" prefHeight="427.0" prefWidth="189.0">
-                     <children>
-                        <Group>
-                           <children>
-                              <Rectangle fx:id="dmGap" arcHeight="15.0" arcWidth="15.0" fill="#2f3136" height="8.0" layoutY="43.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="185.0" />
-                              <Rectangle fx:id="dmUserClicked" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="185.0" />
-                              <Rectangle fx:id="dmUserHover" arcHeight="15.0" arcWidth="15.0" fill="#34373c" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="185.0" />
-                              <Text fill="#829297" layoutX="59.0" layoutY="29.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Username">
-                                 <font>
-                                    <Font name="Arial" size="21.0" />
-                                 </font>
-                              </Text>
-                              <Rectangle fx:id="dmUserHitBox" arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" onMouseClicked="#settingsMenu" onMouseEntered="#settingsEnter" onMouseExited="#settingsExit" opacity="0.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="185.0" />
-                              <ImageView fx:id="dmUserIcon" fitHeight="38.0" fitWidth="38.0" layoutX="8.0" layoutY="3.5" onMouseClicked="#clickRoomOne" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@../resources/room%20icons/Room_1.png" />
-                                 </image>
-                              </ImageView>
-                           </children>
-                        </Group>
-                     </children>
-                  </TextFlow>
+                  <TextFlow fx:id="dmUserFlow" prefHeight="427.0" prefWidth="189.0" />
                </content>
             </ScrollPane>
             <Line endX="-3.0" endY="-25.0" layoutX="-164.0" layoutY="151.0" startX="-3.0" startY="-16.5" stroke="#829297" strokeWidth="2.0" />

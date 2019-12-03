@@ -303,9 +303,9 @@ public class SocketServer extends Application
 			return;
 		}
 		
-		else if(msg.startsWith("\\dm ")) // DM User: \\dm userToSendTo msg
+		else if(msg.startsWith("\\msg ")) // Message User: \\msg userToSendTo msg
 		{
-			dm(msg, socketChannel);			
+			msg(msg, socketChannel);			
 			return;
 		}
 		
@@ -342,6 +342,12 @@ public class SocketServer extends Application
 		else if(msg.startsWith("\\userUpdate ")) // Update User Info: \\userUpdate color iconID
 		{
 			updateUser(msg, socketChannel);			
+			return;
+		}
+		
+		else if(msg.startsWith("\\dm ")) // Dm message: \\dm userToReci
+		{
+			dm(msg, socketChannel);
 			return;
 		}
 		
@@ -466,8 +472,64 @@ public class SocketServer extends Application
 			}
 			
 			controller.writeToConsole("File sent. Size: " + totalSent);
+		}	
+	}
+	
+	private static void dm(String msg, SocketChannel socketChannel)
+	{
+		String[] parsedMsg = msg.split(" ");
+		
+		ClientData sender = null;
+		
+		if(sender == null)
+			sender = roomOne.findClientBySocket(socketChannel);
+		
+		if(sender == null)
+			sender = roomTwo.findClientBySocket(socketChannel);
+		
+		if(sender == null)
+			sender = roomThree.findClientBySocket(socketChannel);
+		
+		if(sender == null)
+			sender = notInRoom.findClientBySocket(socketChannel);
+		
+		if(sender == null)
+			return;
+		
+		ClientData receiver = null;
+		
+		if(receiver == null)
+			receiver = roomOne.findClientByUsername(parsedMsg[1]);
+		
+		if(receiver == null)
+			receiver = roomTwo.findClientByUsername(parsedMsg[1]);
+		
+		if(receiver == null)
+			receiver = roomThree.findClientByUsername(parsedMsg[1]);
+		
+		if(receiver == null)
+			receiver = notInRoom.findClientByUsername(parsedMsg[1]);
+		
+		if(receiver == null)
+			return;
+		
+		msg = "DM//" + sender.getUsername() + "//" + receiver.getUsername() + "//" + sender.getColor() + "//" + sender.getIconID() + "//" + parsedMsg[2]; // DM//sender//receiver//#user_color//iconID//msg
+		
+		try
+		{
+			ByteBuffer sendBuffer = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+			receiver.getSocketChannel().write(sendBuffer);
+			sendBuffer.rewind();
+			
+			sender.getSocketChannel().write(sendBuffer);
+			sendBuffer.rewind();
+			controller.writeToConsole(sender.getUsername() + " sent a DM to " + receiver.getUsername());
 		}
 		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 	private static void userDisconnect(String msg, SocketChannel socketChannel, SelectionKey key)
@@ -789,7 +851,7 @@ public class SocketServer extends Application
 		controller.writeToConsole(client.getUsername() + " has left Private Mode.");
 	}
 	
-	private static void dm(String msg, SocketChannel socketChannel)
+	private static void msg(String msg, SocketChannel socketChannel)
 	{
 		String[] parts = msg.split(" ");
 		

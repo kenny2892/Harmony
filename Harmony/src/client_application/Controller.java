@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import client_application.Main.StartMode;
@@ -66,6 +67,10 @@ public class Controller
 	@FXML private Text invalidUserDM;
 	@FXML private TextField dmUserInput;
 	@FXML private TextFlow dmUserFlow;
+	
+	@FXML private ScrollPane dmTxtScrollPane;
+	@FXML private TextFlow dmTextFlow;
+	@FXML private TextArea enterDmTextArea;
 	
 	@FXML private TextFlow mainTextFlow;
 	@FXML private ScrollPane mainTxtScrollPane;
@@ -127,7 +132,8 @@ public class Controller
 	{
 		selectedRoomLine.setLayoutX(104);
 		selectedRoomLine.setLayoutY(38);
-		
+
+		titleLogoGroup.setVisible(false);
 		titleClicked.setVisible(false);
 		titleHover.setVisible(false);
 		settingsClicked.setVisible(false);
@@ -283,7 +289,7 @@ public class Controller
 		if(Main.getStartMode() == StartMode.TITLE || Main.getUsername() == null)
 			titleMenu();
 		
-		else
+		else if(Main.getStartMode() == StartMode.SETTINGS)
 			settingsMenu();
 		
 		startRoomIcon.setImage(new Image(getClass().getResource("/resources/room icons/Start_Room_Highlight.png").toExternalForm()));
@@ -396,6 +402,47 @@ public class Controller
 
 				else if (msg.length() > Main.CHAR_LIMIT)
 					enterMsgTextArea.setText(msg.substring(0, Main.CHAR_LIMIT));
+			}
+		});
+		
+		enterDmTextArea.setOnKeyReleased(new EventHandler<KeyEvent>()
+		{
+			@Override
+			public void handle(KeyEvent keyEvent)
+			{
+				String msg = enterDmTextArea.getText();
+
+				if (keyEvent.getCode() == KeyCode.ENTER)
+				{
+					if (msg.contains("\n"))
+						msg = msg.replace("\n", "");
+
+					if (msg == null || msg.length() <= 0)
+					{
+						enterDmTextArea.clear();
+						return;
+					}
+					Main.sendMsg("\\dm " + Main.getCurrentDmUser() + " " + msg);
+					enterDmTextArea.clear();
+					
+					if(msg.startsWith("\\x"))
+					{
+						try
+						{
+							Thread.sleep(500);
+						}
+						
+						catch(InterruptedException e)
+						{
+							e.printStackTrace();
+						}
+						
+						closeApp();
+					}
+				}
+
+				else if (msg.length() > Main.CHAR_LIMIT)
+					enterDmTextArea.setText(msg.substring(0, Main.CHAR_LIMIT));
 			}
 		});
 	}
@@ -600,6 +647,47 @@ public class Controller
 			dmUserHitBox.setHeight(46);
 			dmUserHitBox.setOpacity(0.0);
 			dmUserHitBox.setId("dmUserHitBox");
+
+			dmUserHitBox.setOnMouseEntered(new EventHandler<Event>()
+			{
+				@Override
+				public void handle(Event event)
+				{
+					if(!dmUserClicked.isVisible())
+						dmUserHover.setVisible(true);
+				}
+			});
+			
+			dmUserHitBox.setOnMouseExited(new EventHandler<Event>()
+			{
+				@Override
+				public void handle(Event event)
+				{
+					if(!dmUserClicked.isVisible())
+						dmUserHover.setVisible(false);
+				}
+			});
+			
+			dmUserHitBox.setOnMouseClicked(new EventHandler<Event>()
+			{
+				@Override
+				public void handle(Event event)
+				{
+					dmUserClicked.setVisible(true);
+					
+					settingsPane.setVisible(false);
+					titlePane.setVisible(false);
+					titleLogoGroup.setVisible(false);
+					dmUserInputPane.setVisible(false);
+					dmMsgPane.setVisible(true);
+					
+					Main.setDmMsg(Main.getCurrentDmUser(), dmTextFlow.getChildren());
+					
+					Main.setCurrentDmUser(parsedMsg[2]);
+					dmTextFlow.getChildren().clear();
+					dmTextFlow.getChildren().addAll(Main.getDmMsg(parsedMsg[2]));
+				}
+			});
 			
 			Node userIcon = getUserIcon(parsedMsg[3], parsedMsg[4], 19);
 			userIcon.setLayoutX(8);
@@ -610,6 +698,75 @@ public class Controller
 			
 			Main.addToDMs(parsedMsg[2]);
 		}
+	}
+	
+	private void dm(String[] parsedMsg) // DM//sender//receiver//#user_color//iconID//msg
+	{
+		String sender = parsedMsg[1];
+		String receiver = parsedMsg[2];
+		String iconID = parsedMsg[4];
+		String hexColor = parsedMsg[3];
+		String msg = parsedMsg[5];
+		
+		if(!Main.isInDMs(sender) && sender.compareTo(Main.getUsername()) != 0)
+		{
+			String[] addDM = new String[] { "DM_USER_CHECK", "Yes", sender, iconID, hexColor } ; // DM_USER_CHECK//Answer//usernameToDM//IconID//HexColor
+			dmUserCheck(addDM);
+		}
+		
+		Node icon = getUserIcon(iconID, hexColor, 25);
+
+		Date curr = new Date();
+		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a");
+		Text date = new Text("      " + dateFormat.format(curr) + "\n");
+		date.setStroke(Color.web("#9b9fa1"));
+		date.setFont(Font.font("Arial", FontWeight.THIN, 12));
+
+		Text username = new Text(sender);
+		username.setFill(Color.web(hexColor));
+		username.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+
+		TextArea txtMsg = new TextArea(msg + "\n");
+		txtMsg.setStyle("-fx-background-color: transparent;-fx-text-inner-color: #d7d5d9;");
+		txtMsg.setFont(Font.font("Arial", 14));
+		txtMsg.setMaxWidth(653);
+
+		if (msg.length() <= 50)
+			txtMsg.setMaxHeight(45);
+
+		else if (msg.length() <= 100)
+			txtMsg.setMaxHeight(60);
+
+		else
+			txtMsg.setMaxHeight(85);
+
+		txtMsg.setWrapText(true);
+		txtMsg.setEditable(false);
+		ScrollBar scrollBarv = (ScrollBar) txtMsg.lookup(".scroll-bar:vertical");
+
+		if (scrollBarv != null)
+			scrollBarv.setDisable(true);
+
+		Line divider = new Line();
+		divider.setStartX(-100.0);
+		divider.setEndX(620.0);
+		divider.setStroke(Color.web("#727373"));
+
+		TextFlow iconFlow = new TextFlow(new Text("\n"), icon);
+		TextFlow msgFlow = new TextFlow(new Text("\n     "), username, date, new Text("\n     "), txtMsg);
+		
+		if(Main.getCurrentDmUser() != null && (Main.getCurrentDmUser().compareTo(sender) == 0 || Main.getCurrentDmUser().compareTo(receiver) == 0))
+		{
+			dmTextFlow.getChildren().addAll(iconFlow, msgFlow, divider);
+			enterDmTextArea.clear();
+		}
+		
+		ArrayList<Node> toAdd = new ArrayList<Node>();
+		toAdd.add(iconFlow);
+		toAdd.add(msgFlow);
+		toAdd.add(divider);
+		
+		Main.addDmMsg(sender, toAdd);
 	}
 
 	private void displayMsg(String msg)
@@ -655,6 +812,12 @@ public class Controller
 		else if(msg.startsWith("DM_USER_CHECK//"))
 		{
 			dmUserCheck(parsedMsg);
+			return;
+		}
+		
+		else if(msg.startsWith("DM")) // DM//username_of_sender//#user_color//iconID//msg
+		{
+			dm(parsedMsg);
 			return;
 		}
 		
@@ -947,7 +1110,8 @@ public class Controller
 	}
 	
 	public void titleMenu()
-	{		
+	{
+		titleLogoGroup.setVisible(true);
 		titleClicked.setVisible(false);
 		titleHover.setVisible(false);
 		settingsClicked.setVisible(false);
@@ -986,7 +1150,8 @@ public class Controller
 	{
 		if (Main.getUsername() == null)
 			return;
-		
+
+		titleLogoGroup.setVisible(true);
 		titleClicked.setVisible(false);
 		titleHover.setVisible(false);
 		settingsClicked.setVisible(false);
