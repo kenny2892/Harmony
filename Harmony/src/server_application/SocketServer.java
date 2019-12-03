@@ -1148,7 +1148,10 @@ public class SocketServer extends Application
 			ByteBuffer buffer = ByteBuffer.wrap(msg);
 			clientToSendTo.getSocketChannel().write(buffer);
 			buffer.rewind();
-			controller.writeToConsole(sender.getUsername() + ": Msg Sent");
+			
+			sender.getSocketChannel().write(buffer);
+			buffer.rewind();
+			controller.writeToConsole(sender.getUsername() + " Sent a message to " + clientToSendTo.getUsername());
 		}
 		
 		catch(Exception e)
