@@ -38,7 +38,8 @@ public class Main extends Application
 	
 	private static Stage stage;
 	private static ArrayList<String> usersInRoom;
-	private static ArrayList<Node> roomOneChat; // Arrows turn white, possible add loading room screen
+	private static ArrayList<String> usersToDM;
+	private static ArrayList<Node> roomOneChat;
 	private static ArrayList<Node> roomTwoChat;
 	private static ArrayList<Node> roomThreeChat;
 	private static int totalMsgCount = 0;
@@ -98,7 +99,9 @@ public class Main extends Application
 			roomOneChat = new ArrayList<Node>();
 			roomTwoChat = new ArrayList<Node>();
 			roomThreeChat = new ArrayList<Node>();
+			
 			usersInRoom = new ArrayList<String>();
+			usersToDM = new ArrayList<String>();
 
 			String home = System.getProperty("user.home");
 			downloadDirectory = new File(home + "/Downloads/");
@@ -269,6 +272,16 @@ public class Main extends Application
 	public static ArrayList<String> getUserArray()
 	{
 		return usersInRoom;
+	}
+	
+	public static boolean isInDMs(String userToCheck)
+	{
+		return usersToDM.contains(userToCheck);
+	}
+	
+	public static void addToDMs(String userToAdd)
+	{
+		usersToDM.add(userToAdd);
 	}
 
 	public static String getDownloadDirPath()

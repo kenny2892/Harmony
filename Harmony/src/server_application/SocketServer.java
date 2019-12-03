@@ -333,6 +333,12 @@ public class SocketServer extends Application
 			return;
 		}
 		
+		else if(msg.startsWith("\\dmUserCheck "))
+		{
+			dmCheckUser(msg, socketChannel);
+			return;
+		}
+		
 		else if(msg.startsWith("\\userUpdate ")) // Update User Info: \\userUpdate color iconID
 		{
 			updateUser(msg, socketChannel);			
@@ -488,6 +494,13 @@ public class SocketServer extends Application
 		
 		else if(notInRoom.containsClientBySocketChannel(socketChannel))
 			notInRoom.removeClient(socketChannel);
+		
+		else if(privateRoom.containsClientBySocketChannel(socketChannel))
+		{
+			client = privateRoom.findClientBySocket(socketChannel);
+			privateRoom.removeClient(socketChannel);
+			privateChatOldRooms.remove(client.getUsername());
+		}
 		
 		if(client == null)
 		{
@@ -872,6 +885,43 @@ public class SocketServer extends Application
 			socketChannel.write(bufferSend);
 			bufferSend.rewind();
 			controller.writeToConsole(username + ": Did a User Check");
+		}
+		
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private static void dmCheckUser(String msg, SocketChannel socketChannel)
+	{
+		String[] parts = msg.split(" ");
+		String username = parts[1];
+		ClientData clientToDM = roomOne.findClientByUsername(username);
+		
+		if(clientToDM == null)
+			clientToDM = roomTwo.findClientByUsername(username);
+			
+		if(clientToDM == null)
+			clientToDM = roomThree.findClientByUsername(username);
+		
+		if(clientToDM == null)
+			clientToDM = notInRoom.findClientByUsername(username);
+		
+		if(clientToDM == null)
+		{
+			msg = "DM_USER_CHECK//No";
+		}
+		
+		else
+			msg = "DM_USER_CHECK//Yes//" + username + "//" + clientToDM.getIconID() + "//" + clientToDM.getColor();
+		
+		try
+		{
+			ByteBuffer bufferSend = ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
+			socketChannel.write(bufferSend);
+			bufferSend.rewind();
+			controller.writeToConsole("Did a DM User Check on: " + username);
 		}
 		
 		catch(Exception e)

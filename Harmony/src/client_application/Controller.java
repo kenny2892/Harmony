@@ -47,6 +47,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -60,6 +61,12 @@ public class Controller
 	@FXML private ImageView startRoomIcon;
 	@FXML private Line selectedRoomLine;
 	
+	@FXML private Pane dmMsgPane;
+	@FXML private Pane dmUserInputPane;
+	@FXML private Text invalidUserDM;
+	@FXML private TextField dmUserInput;
+	@FXML private TextFlow dmUserFlow;
+	
 	@FXML private TextFlow mainTextFlow;
 	@FXML private ScrollPane mainTxtScrollPane;
 	@FXML private TextArea enterMsgTextArea;
@@ -72,6 +79,7 @@ public class Controller
 	@FXML private Text invalidUserFileTransfer;
 	@FXML private Text invalidFileTransfer;
 	
+	@FXML private Group titleLogoGroup;
 	@FXML private Group serverScreen;
 	@FXML private Group loginScreen;
 	@FXML private Group signedInScreen;
@@ -145,6 +153,8 @@ public class Controller
 		menuControls();
 		chatDisplay.setVisible(false);
 		startDisplay.setVisible(true);
+		dmMsgPane.setVisible(false);
+		dmUserInputPane.setVisible(false);
 		
 		showStartDisplay();
 	}
@@ -268,6 +278,7 @@ public class Controller
 	{
 		startDisplay.setVisible(true);
 		chatDisplay.setVisible(false);
+		titleLogoGroup.setVisible(false);
 		
 		if(Main.getStartMode() == StartMode.TITLE || Main.getUsername() == null)
 			titleMenu();
@@ -543,6 +554,63 @@ public class Controller
 		peopleTextFlow.getChildren().remove(indexToRemove); // Remove Name
 		Main.removeUserInRoom(indexToRemove / 2);
 	}
+	
+	private void dmUserCheck(String[] parsedMsg) // DM_USER_CHECK//Answer//usernameToDM//IconID//HexColor
+	{
+		if (parsedMsg[1].compareTo("No") == 0)
+			invalidUserDM.setVisible(true);
+		
+		else if(parsedMsg.length == 5 && !Main.isInDMs(parsedMsg[2]))
+		{
+			Rectangle dmGap = new Rectangle();
+			dmGap.setArcHeight(15);
+			dmGap.setArcWidth(15);
+			dmGap.setFill(Color.web("#2f3136"));
+			dmGap.setWidth(185);
+			dmGap.setHeight(8);
+			dmGap.setLayoutY(43);
+			dmGap.setId("dmGap");
+			
+			Rectangle dmUserClicked = new Rectangle();
+			dmUserClicked.setArcHeight(15);
+			dmUserClicked.setArcWidth(15);
+			dmUserClicked.setFill(Color.web("#393c43"));
+			dmUserClicked.setWidth(185);
+			dmUserClicked.setHeight(46);
+			dmUserClicked.setId("dmUserClicked");
+			
+			Rectangle dmUserHover = new Rectangle();
+			dmUserHover.setArcHeight(15);
+			dmUserHover.setArcWidth(15);
+			dmUserHover.setFill(Color.web("#34373c"));
+			dmUserHover.setWidth(185);
+			dmUserHover.setHeight(46);
+			dmUserHover.setId("dmUserHover");
+			
+			Text userText = new Text(parsedMsg[2]);
+			userText.setFont(Font.font("arial", FontWeight.NORMAL, FontPosture.REGULAR, 21));
+			userText.setLayoutX(59);
+			userText.setLayoutY(29);
+			
+			Rectangle dmUserHitBox = new Rectangle();
+			dmUserHitBox.setArcHeight(15);
+			dmUserHitBox.setArcWidth(15);
+			dmUserHitBox.setFill(Color.WHITE);
+			dmUserHitBox.setWidth(185);
+			dmUserHitBox.setHeight(46);
+			dmUserHitBox.setOpacity(0.0);
+			dmUserHitBox.setId("dmUserHitBox");
+			
+			Node userIcon = getUserIcon(parsedMsg[3], parsedMsg[4], 19);
+			userIcon.setLayoutX(8);
+			userIcon.setLayoutY(3.5);
+			
+			Group dmUserGroup = new Group(dmGap, dmUserClicked, dmUserHover, userText, dmUserHitBox, userIcon);
+			dmUserFlow.getChildren().add(dmUserGroup);
+			
+			Main.addToDMs(parsedMsg[2]);
+		}
+	}
 
 	private void displayMsg(String msg)
 	{
@@ -581,6 +649,12 @@ public class Controller
 				Main.sendMsg("\\u " + username + " " + Main.getHexColor() + " " + Main.getIconID());
 			}
 			
+			return;
+		}
+		
+		else if(msg.startsWith("DM_USER_CHECK//"))
+		{
+			dmUserCheck(parsedMsg);
 			return;
 		}
 		
@@ -893,14 +967,17 @@ public class Controller
 		{
 			case SERVER:
 				serverScreen.setVisible(true);
+				titleLogoGroup.setVisible(true);
 				break;
 
 			case LOGIN:
 				loginScreen.setVisible(true);
+				titleLogoGroup.setVisible(true);
 				break;
 
 			case SIGNED_IN:
 				signedInScreen.setVisible(true);
+				titleLogoGroup.setVisible(true);
 				break;
 		}
 	}
@@ -920,6 +997,7 @@ public class Controller
 		Main.setStartMode(StartMode.SETTINGS);
 		settingsClicked.setVisible(true);
 		settingsPane.setVisible(true);
+		titleLogoGroup.setVisible(true);
 		
 		filePathTxt.setText(Main.getDownloadDirPath());
 		updateIconPreview();
@@ -1118,6 +1196,31 @@ public class Controller
 	public void openGitHub()
 	{
 		Main.openGitHub();
+	}
+	
+	public void dmUserInput()
+	{
+		dmUserInputPane.setVisible(true);
+		invalidUserDM.setVisible(false);
+		dmUserInput.clear();
+	}
+	
+	public void dmUserAdd()
+	{
+		String username = dmUserInput.getText();
+		
+		if(username == null)
+			invalidUserDM.setVisible(true);
+		
+		else
+			Main.sendMsg("\\dmUserCheck " + username);
+	}
+	
+	public void dmUserCancel()
+	{
+		dmUserInputPane.setVisible(false);
+		invalidUserDM.setVisible(false);
+		dmUserInput.clear();
 	}
 
 	public void minimizeApp()

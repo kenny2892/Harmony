@@ -46,7 +46,7 @@
       <Line fx:id="minimizeIcon" endX="-88.0" endY="-3.814697265625E-6" layoutX="1339.0" layoutY="11.0" startX="-104.5" startY="-3.814697265625E-6" stroke="#b9bbbe" />
       <Rectangle fx:id="minimizeHitBox" fill="#202225" height="23.0" layoutX="1230.0" onMouseClicked="#minimizeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
       <Rectangle fx:id="closeHitBox" fill="#202225" height="23.0" layoutX="1255.0" onMouseClicked="#closeApp" opacity="0.01" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="25.0" />
-      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@chatDisplay.css">
+      <Group fx:id="chatDisplay" layoutX="327.0" layoutY="83.0" stylesheets="@chatDisplay.css" visible="false">
          <children>
             <ScrollPane fx:id="mainTxtScrollPane" hbarPolicy="NEVER" prefHeight="533.0" prefWidth="743.0" stylesheets="@chatDisplay.css">
                <content>
@@ -139,24 +139,28 @@
             <Image url="@../resources/room%20icons/Room_3.png" />
          </image>
       </ImageView>
-      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0" visible="false">
+      <Group fx:id="startDisplay" layoutX="451.0" layoutY="84.0">
          <children>
             <Rectangle fill="#36393f" height="635.0" layoutX="589.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="239.0" />
-            <ImageView fitHeight="93.0" fitWidth="493.0" layoutX="164.0" layoutY="46.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../resources/Icon%20Text%20-%20Orange.png" />
-               </image>
-            </ImageView>
-            <ImageView fitHeight="138.0" fitWidth="120.0" layoutX="23.0" layoutY="19.0" pickOnBounds="true" preserveRatio="true">
-               <image>
-                  <Image url="@../resources/Icon.png" />
-               </image>
-            </ImageView>
-            <Text fill="WHITE" layoutX="-1.0" layoutY="218.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Created By Jesse Ross" underline="true">
-               <font>
-                  <Font name="Arial" size="64.0" />
-               </font>
-            </Text>
+            <Group fx:id="titleLogoGroup" layoutX="-1.0" layoutY="19.0" visible="false">
+               <children>
+                  <ImageView fitHeight="93.0" fitWidth="493.0" layoutX="165.0" layoutY="27.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../resources/Icon%20Text%20-%20Orange.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="138.0" fitWidth="120.0" layoutX="24.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../resources/Icon.png" />
+                     </image>
+                  </ImageView>
+                  <Text fill="WHITE" layoutY="203.0625" strokeType="OUTSIDE" strokeWidth="0.0" text="Created By Jesse Ross" underline="true">
+                     <font>
+                        <Font name="Arial" size="64.0" />
+                     </font>
+                  </Text>
+               </children>
+            </Group>
             <Pane fx:id="titlePane" layoutX="122.0" layoutY="275.0" prefWidth="422.0">
                <children>
                   <Group fx:id="serverScreen" layoutX="16.0" layoutY="9.09375" visible="false">
@@ -212,7 +216,7 @@
                         </Button>
                      </children>
                   </Group>
-                  <Group fx:id="signedInScreen" layoutX="78.0" layoutY="-2.0">
+                  <Group fx:id="signedInScreen" layoutX="78.0" layoutY="-2.0" visible="false">
                      <children>
                         <Hyperlink fx:id="githubLink" onAction="#openGitHub" style="-fx-border-color: null; -fx-border-style: solid; -fx-border-width: 0px;" text="GitHub Link" underline="true">
                            <font>
@@ -288,6 +292,67 @@
                   <Rectangle fx:id="settingsHitBox" arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" onMouseClicked="#settingsMenu" onMouseEntered="#settingsEnter" onMouseExited="#settingsExit" opacity="0.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="179.0" />
                </children>
             </Group>
+            <Text fill="#829297" layoutX="-328.0" layoutY="134.0" strokeType="OUTSIDE" strokeWidth="0.0" text="DIRECT MESSAGES">
+               <font>
+                  <Font name="Arial Bold" size="11.0" />
+               </font>
+            </Text>
+            <Pane fx:id="dmMsgPane" layoutX="-148.0" layoutY="-61.0" prefHeight="695.0" prefWidth="975.0" visible="false" />
+            <Pane fx:id="dmUserInputPane" layoutX="-25.0" layoutY="236.0" prefHeight="102.0" prefWidth="743.0">
+               <children>
+                  <Rectangle fill="#2f3136" height="72.0" layoutY="28.0" stroke="#232527" strokeType="INSIDE" strokeWidth="4.0" width="743.0" />
+                  <Text fill="WHITE" layoutX="98.0" layoutY="70.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Username:">
+                     <font>
+                        <Font name="Arial" size="22.0" />
+                     </font>
+                  </Text>
+                  <Button layoutX="430.0" layoutY="47.0" mnemonicParsing="false" onMouseClicked="#dmUserAdd" prefHeight="33.0" prefWidth="102.0" text="Add">
+                     <font>
+                        <Font name="Arial" size="18.0" />
+                     </font>
+                  </Button>
+                  <Text fx:id="invalidUserDM" fill="RED" layoutX="308.0" layoutY="22.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Invalid User">
+                     <font>
+                        <Font name="Arial" size="24.0" />
+                     </font>
+                  </Text>
+                  <TextField fx:id="dmUserInput" layoutX="210.0" layoutY="52.0" prefHeight="25.0" prefWidth="209.0" />
+                  <Button layoutX="544.0" layoutY="47.0" mnemonicParsing="false" onMouseClicked="#dmUserCancel" prefHeight="33.0" prefWidth="102.0" text="Cancel">
+                     <font>
+                        <Font name="Arial" size="18.0" />
+                     </font>
+                  </Button>
+               </children>
+            </Pane>
+            <ScrollPane layoutX="-343.0" layoutY="143.0" prefHeight="436.0" prefWidth="209.0" stylesheets="@chatDisplay.css">
+               <content>
+                  <TextFlow fx:id="dmUserFlow" prefHeight="427.0" prefWidth="189.0">
+                     <children>
+                        <Group>
+                           <children>
+                              <Rectangle fx:id="dmGap" arcHeight="15.0" arcWidth="15.0" fill="#2f3136" height="8.0" layoutY="43.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="185.0" />
+                              <Rectangle fx:id="dmUserClicked" arcHeight="15.0" arcWidth="15.0" fill="#393c43" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="185.0" />
+                              <Rectangle fx:id="dmUserHover" arcHeight="15.0" arcWidth="15.0" fill="#34373c" height="46.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="185.0" />
+                              <Text fill="#829297" layoutX="59.0" layoutY="29.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Username">
+                                 <font>
+                                    <Font name="Arial" size="21.0" />
+                                 </font>
+                              </Text>
+                              <Rectangle fx:id="dmUserHitBox" arcHeight="15.0" arcWidth="15.0" fill="WHITE" height="46.0" onMouseClicked="#settingsMenu" onMouseEntered="#settingsEnter" onMouseExited="#settingsExit" opacity="0.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="185.0" />
+                              <ImageView fx:id="dmUserIcon" fitHeight="38.0" fitWidth="38.0" layoutX="8.0" layoutY="3.5" onMouseClicked="#clickRoomOne" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@../resources/room%20icons/Room_1.png" />
+                                 </image>
+                              </ImageView>
+                           </children>
+                        </Group>
+                     </children>
+                  </TextFlow>
+               </content>
+            </ScrollPane>
+            <Line endX="-3.0" endY="-25.0" layoutX="-164.0" layoutY="151.0" startX="-3.0" startY="-16.5" stroke="#829297" strokeWidth="2.0" />
+            <Line endX="-25.0" endY="-3.0" layoutX="-146.0" layoutY="133.0" startX="-16.5" startY="-3.0" stroke="#829297" strokeWidth="2.0" />
+            <Rectangle fx:id="dmAddUser" fill="DODGERBLUE" height="14.0" layoutX="-173.5" layoutY="123.0" onMouseClicked="#dmUserInput" opacity="0.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="13.0" />
          </children>
       </Group>
    </children>
