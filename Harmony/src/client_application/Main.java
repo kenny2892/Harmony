@@ -339,6 +339,7 @@ public class Main extends Application
 		}
 
 		stage.close();
+		System.exit(0);
 	}
 
 	public static void setXOffset(double newX)

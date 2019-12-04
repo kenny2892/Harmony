@@ -391,7 +391,10 @@ public class SocketServer extends Application
 		try
 		{
 			Thread.sleep(1000);
-			while((numberRead = socketChannel.read(buffer)) > 0)
+			int totalRead = size;
+
+			totalRead -= socketChannel.read(buffer);
+			do
 			{
 				buffer.flip();
 
@@ -404,7 +407,7 @@ public class SocketServer extends Application
 				sentObj = temp;
 				
 				buffer.clear();
-			}
+			}while((totalRead -= socketChannel.read(buffer)) > 0);
 		}
 		
 		catch(Exception e)
@@ -436,7 +439,7 @@ public class SocketServer extends Application
 			for(int i = 2; i < parts.length - 1; i++)
 				toSendMsg += parts[i] + " ";
 								
-			toSendMsg += size;
+			toSendMsg += sentObj.length;
 			
 			try
 			{
@@ -463,7 +466,7 @@ public class SocketServer extends Application
 			try
 			{
 				while(fileBuffer.hasRemaining())
-					totalSent += socketChannel.write(fileBuffer);
+					totalSent += clientToSendTo.getSocketChannel().write(fileBuffer);
 			}
 			
 			catch(Exception e)

@@ -498,7 +498,7 @@ public class Controller
 							
 							fileToDownload.createNewFile();
 							
-							Thread.sleep(1000);
+							Thread.sleep(2000);
 							OutputStream out = new FileOutputStream(fileToDownload);
 							
 							int length = Integer.parseInt(parts[parts.length - 1]);
